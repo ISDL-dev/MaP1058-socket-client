@@ -9,7 +9,7 @@ import (
 )
 
 type Agent interface {
-	StartRec(ctx context.Context, recSec time.Duration, recDateTime string) error
+	StartRec(ctx context.Context, recTime time.Duration, recDateTime string) error
 	EndRec(ctx context.Context) error
 	CaptureSig(ctx context.Context, buf []byte) error
 	// GetStat(ctx context.Context) ([]byte, error)
@@ -29,8 +29,8 @@ func NewAgent(s socket.SocketClient) Agent {
 	}
 }
 
-func (a *agent) StartRec(ctx context.Context, recSec time.Duration, recDateTime string) error {
-	sCmd := fmt.Sprintf("<SCMD>START:A:%d,\"%s\",,,,,,,,,</SCMD>", recSec, recDateTime)
+func (a *agent) StartRec(ctx context.Context, recTime time.Duration, recDateTime string) error {
+	sCmd := fmt.Sprintf("<SCMD>START:A:%d,\"%s\",,,,,,,,,</SCMD>", recTime, recDateTime)
 	err := a.SocketClient.SendCmd(ctx, sCmd)
 	if err != nil {
 		return fmt.Errorf("failed to send command %w", err)
