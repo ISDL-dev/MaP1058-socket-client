@@ -3,13 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
-	"net"
+	"time"
 
 	"github.com/Be3751/socket-capture-signals/internal/agent"
 	"github.com/Be3751/socket-capture-signals/internal/config"
-	"github.com/Be3751/socket-capture-signals/internal/socket"
+	"github.com/Be3751/socket-capture-signals/internal/pkg/socket"
 )
 
+// TODO: 受信コマンドをParseする関数も必要
+// TODO: クライアント側のIPアドレスを自動取得する処理も必要
 func main() {
 	conf := config.Config{
 		ServerIP:         "127.0.0.1",
@@ -20,30 +22,29 @@ func main() {
 	}
 	ctx := context.Background()
 
-	conn, err := connect(ctx, conf)
+	conn, err := socket.NewClient(conf)
 	if err != nil {
 		fmt.Println(err)
-		return
+		panic(err)
 	}
 
 	client := socket.NewSocketClient(conn)
-	_ = agent.NewAgent(client)
-}
+	agent := agent.NewAgent(client)
 
-func connect(ctx context.Context, conf config.Config) (*net.TCPConn, error) {
-	serverAdd, err := net.ResolveTCPAddr("tcp", conf.ServerIP+":"+conf.ServerPortText)
+	err = agent.StartRec(ctx, time.Second, "2023/01/01")
 	if err != nil {
-		return nil, err
-	}
-	clientAdd := &net.TCPAddr{
-		IP:   net.IP(conf.ClientIP),
-		Port: conf.ClientPort,
+		fmt.Println(err)
+		panic(err)
 	}
 
-	// TCPネットワークの接続
-	conn, err := net.DialTCP("tcp", clientAdd, serverAdd)
+	buf := make([]byte, 1024)
+	err = agent.CaptureSig(ctx, buf)
 	if err != nil {
-		return nil, err
+		fmt.Println(err)
+		panic(err)
 	}
-	return conn, nil
+
+	fmt.Println(buf)
+
+	agent.EndRec(ctx)
 }
