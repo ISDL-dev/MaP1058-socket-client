@@ -2,13 +2,19 @@ package agent
 
 import (
 	"context"
+	"fmt"
 	"time"
 
-	"github.com/Be3751/socket-capture-signals/internal/socket"
+	"github.com/Be3751/socket-capture-signals/internal/pkg/socket"
 )
 
 type Agent interface {
-	GetSignals(ctx context.Context) ([]byte, error)
+	StartRec(ctx context.Context, recSec time.Duration, recDateTime string) error
+	EndRec(ctx context.Context) error
+	CaptureSig(ctx context.Context, buf []byte) error
+	// GetStat(ctx context.Context) ([]byte, error)
+	// Mark(ctx context.Context) error
+	// UnMark(ctx context.Context) error
 }
 
 var _ Agent = (*agent)(nil)
@@ -23,13 +29,47 @@ func NewAgent(s socket.SocketClient) Agent {
 	}
 }
 
-func (a *agent) GetSignals(ctx context.Context) ([]byte, error) {
-	// TODO: YYYY/MM/DD形式が
-	currentTime := time.Now()
-	err := a.SocketClient.StartRec(ctx, time.Second*10, currentTime.String())
+func (a *agent) StartRec(ctx context.Context, recSec time.Duration, recDateTime string) error {
+	sCmd := fmt.Sprintf("<SCMD>START:A:%d,\"%s\",,,,,,,,,</SCMD>", recSec, recDateTime)
+	err := a.SocketClient.SendCmd(ctx, sCmd)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("failed to send command %w", err)
 	}
 
-	return nil, nil
+	rCmd, err := a.SocketClient.ReceiveCmd(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to receive command %w", err)
+	}
+	if rCmd != sCmd {
+		return fmt.Errorf("failed to start recording")
+	}
+
+	return nil
+}
+
+func (a *agent) EndRec(ctx context.Context) error {
+	sCmd := "<SCMD>END:A:,,,,,,,,,</SCMD>"
+	err := a.SocketClient.SendCmd(ctx, sCmd)
+	if err != nil {
+		return fmt.Errorf("failed to start recording %w", err)
+	}
+
+	rCmd, err := a.SocketClient.ReceiveCmd(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to receive command %w", err)
+	}
+	if rCmd != sCmd {
+		return fmt.Errorf("failed to end recording")
+	}
+
+	return nil
+}
+
+func (a *agent) CaptureSig(ctx context.Context, buf []byte) error {
+	sCmd := "<SCMD>DATA_EEG:A:,,,,,,,,,</SCMD>"
+	err := a.SocketClient.SendCmd(ctx, sCmd)
+	if err != nil {
+		return fmt.Errorf("failed to capture signals %w", err)
+	}
+	return nil
 }
