@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net"
-
-	"github.com/Be3751/socket-capture-signals/internal/config"
 )
 
 type SocketClient interface {
 	SendCmd(ctx context.Context, cmd string) error
 	ReceiveCmd(ctx context.Context) (string, error)
+	// ReceiveBin(ctx context.Context) ([]byte, error)
 }
 
 var _ SocketClient = (*client)(nil)
