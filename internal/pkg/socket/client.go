@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net"
-
-	"github.com/Be3751/socket-capture-signals/internal/config"
 )
 
 type SocketClient interface {
 	SendCmd(ctx context.Context, cmd string) error
 	ReceiveCmd(ctx context.Context) (string, error)
+	// ReceiveBin(ctx context.Context) ([]byte, error)
 }
 
 var _ SocketClient = (*client)(nil)
@@ -25,22 +24,19 @@ type client struct {
 	conn *net.TCPConn
 }
 
-func NewClient(conf config.Config) (*net.TCPConn, error) {
-	serverAdd, err := net.ResolveTCPAddr("tcp", conf.ServerIP+":"+conf.ServerPortText)
+func Connect(conf Config) (*net.TCPConn, error) {
+	serverAdd, err := net.ResolveTCPAddr("tcp", conf.ServerIP+":"+conf.ServerPort)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get server address: %w", err)
 	}
 	clientAdd := &net.TCPAddr{
-		IP:   net.IP(conf.ClientIP),
+		IP:   net.ParseIP(conf.ClientIP),
 		Port: conf.ClientPort,
 	}
-
-	// TCPネットワークの接続
 	conn, err := net.DialTCP("tcp", clientAdd, serverAdd)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to make connection: %w", err)
 	}
-
 	return conn, nil
 }
 
@@ -60,3 +56,18 @@ func (c *client) ReceiveCmd(ctx context.Context) (string, error) {
 	}
 	return string(buf), nil
 }
+
+const (
+	packetSize = 1604
+)
+
+// func (c *client) ReceiveBin(ctx context.Context) ([]byte, error) {
+// 	buf := make([]byte, packetSize)
+// 	len, err := c.conn.Read(buf)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("failed to receive binary data %w", err)
+// 	}
+
+// 	// TODO: サムチェック
+// 	buf[:len]
+// }
