@@ -1,6 +1,6 @@
 package socket
 
-type Config struct {
+type SocketConfig struct {
 	ServerIP   string
 	ServerPort string
 	ClientIP   string

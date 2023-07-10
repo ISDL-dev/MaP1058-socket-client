@@ -5,16 +5,17 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Be3751/socket-capture-signals/internal/pkg/socket"
+	"github.com/Be3751/socket-capture-signals/internal/socket"
 )
 
 func main() {
-	conf := socket.Config{
+	conf := socket.SocketConfig{
 		ServerIP:   "localhost",
 		ServerPort: "3000",
 		ClientIP:   "localhost",
 		ClientPort: 1000,
 	}
+
 	conn, err := socket.Connect(conf)
 	if err != nil {
 		log.Fatal(err)
