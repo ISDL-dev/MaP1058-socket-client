@@ -5,44 +5,63 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Be3751/socket-capture-signals/internal/agent"
-	"github.com/Be3751/socket-capture-signals/internal/pkg/socket"
+	"github.com/Be3751/socket-capture-signals/internal/adapter"
+	"github.com/Be3751/socket-capture-signals/internal/parser"
+	"github.com/Be3751/socket-capture-signals/internal/socket"
 )
 
-// TODO: 受信コマンドをParseする関数も必要
 // TODO: クライアント側のIPアドレスを自動取得する処理も必要
 func main() {
-	conf := socket.Config{
+	txtAdConf := socket.SocketConfig{
 		ServerIP:   "192.168.86.24",
 		ServerPort: "3000",
 		ClientIP:   "192.168.86.21",
 		ClientPort: 1000,
 	}
+	txtAdConn, err := socket.Connect(txtAdConf)
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+	binAdConf := socket.SocketConfig{
+		ServerIP:   "192.168.86.24",
+		ServerPort: "2200",
+		ClientIP:   "192.168.86.21",
+		ClientPort: 1000,
+	}
+	binAdConn, err := socket.Connect(binAdConf)
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+
 	ctx := context.Background()
+	txtAdapter := adapter.NewTxtAdapter(txtAdConn)
+	parser := parser.NewParser(parser.ParseConfig{
+		SumBytes:         1604,
+		SumCheckCodeSize: 4,
+	})
+	binAdapter := adapter.NewBinAdapter(binAdConn, parser)
 
-	conn, err := socket.Connect(conf)
+	err = txtAdapter.StartRec(ctx, time.Second*60, "2023/07/11 15-00-00")
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
 
-	client := socket.NewSocketClient(conn)
-	agent := agent.NewAgent(client)
+	for i := 0; i < 50; i++ {
+		signals, err := binAdapter.ReceiveADValues(ctx)
+		if err != nil {
+			fmt.Println(err)
+			panic(err)
+		}
+		fmt.Println(signals)
+	}
 
-	err = agent.StartRec(ctx, time.Second, "2023/01/01")
+	err = txtAdapter.EndRec(ctx)
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
 
-	buf := make([]byte, 1024)
-	err = agent.StartRec(ctx, time.Minute, "2023/04/17 12:12:12")
-	if err != nil {
-		fmt.Println(err)
-		panic(err)
-	}
-
-	fmt.Println(buf)
-
-	agent.EndRec(ctx)
 }
