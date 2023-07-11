@@ -12,7 +12,6 @@ import (
 	"github.com/Be3751/socket-capture-signals/internal/socket"
 )
 
-// TODO: クライアント側のIPアドレスを自動取得する処理も必要
 func main() {
 	serverIP := "192.168.10.128"
 	clientIP, err := getMyLocalIP()
