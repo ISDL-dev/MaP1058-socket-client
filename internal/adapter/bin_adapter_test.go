@@ -15,7 +15,7 @@ import (
 func TestReceiveADValues(t *testing.T) {
 	t.Run("エラーなくAD値を受信する", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
-		socket := mock_socket.NewMockSocket(ctrl)
+		socket := mock_socket.NewMockConn(ctrl)
 		parser := mock_parser.NewMockParser(ctrl)
 		ctx := context.Background()
 		binAdapter := NewBinAdapter(socket, parser)
@@ -32,7 +32,7 @@ func TestReceiveADValues(t *testing.T) {
 
 	t.Run("サムチェックに失敗する", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
-		socket := mock_socket.NewMockSocket(ctrl)
+		socket := mock_socket.NewMockConn(ctrl)
 		parser := mock_parser.NewMockParser(ctrl)
 		ctx := context.Background()
 		binAdapter := NewBinAdapter(socket, parser)

@@ -10,31 +10,31 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockSocket is a mock of Socket interface.
-type MockSocket struct {
+// MockConn is a mock of Conn interface.
+type MockConn struct {
 	ctrl     *gomock.Controller
-	recorder *MockSocketMockRecorder
+	recorder *MockConnMockRecorder
 }
 
-// MockSocketMockRecorder is the mock recorder for MockSocket.
-type MockSocketMockRecorder struct {
-	mock *MockSocket
+// MockConnMockRecorder is the mock recorder for MockConn.
+type MockConnMockRecorder struct {
+	mock *MockConn
 }
 
-// NewMockSocket creates a new mock instance.
-func NewMockSocket(ctrl *gomock.Controller) *MockSocket {
-	mock := &MockSocket{ctrl: ctrl}
-	mock.recorder = &MockSocketMockRecorder{mock}
+// NewMockConn creates a new mock instance.
+func NewMockConn(ctrl *gomock.Controller) *MockConn {
+	mock := &MockConn{ctrl: ctrl}
+	mock.recorder = &MockConnMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockSocket) EXPECT() *MockSocketMockRecorder {
+func (m *MockConn) EXPECT() *MockConnMockRecorder {
 	return m.recorder
 }
 
 // Read mocks base method.
-func (m *MockSocket) Read(arg0 []byte) (int, error) {
+func (m *MockConn) Read(arg0 []byte) (int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Read", arg0)
 	ret0, _ := ret[0].(int)
@@ -43,13 +43,13 @@ func (m *MockSocket) Read(arg0 []byte) (int, error) {
 }
 
 // Read indicates an expected call of Read.
-func (mr *MockSocketMockRecorder) Read(arg0 interface{}) *gomock.Call {
+func (mr *MockConnMockRecorder) Read(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockSocket)(nil).Read), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Read", reflect.TypeOf((*MockConn)(nil).Read), arg0)
 }
 
 // Write mocks base method.
-func (m *MockSocket) Write(arg0 []byte) (int, error) {
+func (m *MockConn) Write(arg0 []byte) (int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Write", arg0)
 	ret0, _ := ret[0].(int)
@@ -58,7 +58,7 @@ func (m *MockSocket) Write(arg0 []byte) (int, error) {
 }
 
 // Write indicates an expected call of Write.
-func (mr *MockSocketMockRecorder) Write(arg0 interface{}) *gomock.Call {
+func (mr *MockConnMockRecorder) Write(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Write", reflect.TypeOf((*MockSocket)(nil).Write), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Write", reflect.TypeOf((*MockConn)(nil).Write), arg0)
 }
