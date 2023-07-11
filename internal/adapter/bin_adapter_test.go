@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Be3751/socket-capture-signals/internal/model"
-	my_parser "github.com/Be3751/socket-capture-signals/internal/parser"
-	mock_parser "github.com/Be3751/socket-capture-signals/internal/parser/mock"
-	mock_socket "github.com/Be3751/socket-capture-signals/internal/socket/mock"
+	"github.com/Be3751/MaP1058-socket-client/internal/model"
+	my_parser "github.com/Be3751/MaP1058-socket-client/internal/parser"
+	mock_parser "github.com/Be3751/MaP1058-socket-client/internal/parser/mock"
+	mock_socket "github.com/Be3751/MaP1058-socket-client/internal/socket/mock"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )

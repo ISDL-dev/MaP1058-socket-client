@@ -1,13 +1,13 @@
-//go:generate mockgen -source=$GOFILE -destination=mock/mock_$GOFILE -package=mock_$GOPACKAGE -self_package=github.com/Be3751/socket-capture-signals/$GOPACKAGE
+//go:generate mockgen -source=$GOFILE -destination=mock/mock_$GOFILE -package=mock_$GOPACKAGE -self_package=github.com/Be3751/MaP1058-socket-client/$GOPACKAGE
 package adapter
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/Be3751/socket-capture-signals/internal/model"
-	"github.com/Be3751/socket-capture-signals/internal/parser"
-	"github.com/Be3751/socket-capture-signals/internal/socket"
+	"github.com/Be3751/MaP1058-socket-client/internal/model"
+	"github.com/Be3751/MaP1058-socket-client/internal/parser"
+	"github.com/Be3751/MaP1058-socket-client/internal/socket"
 )
 
 // バイナリーデータで生波形データのAD値を受信する

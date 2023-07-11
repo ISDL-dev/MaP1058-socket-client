@@ -1,10 +1,10 @@
-//go:generate mockgen -source=$GOFILE -destination=mock/mock_$GOFILE -package=mock_$GOPACKAGE -self_package=github.com/Be3751/socket-capture-signals/$GOPACKAGE
+//go:generate mockgen -source=$GOFILE -destination=mock/mock_$GOFILE -package=mock_$GOPACKAGE -self_package=github.com/Be3751/MaP1058-socket-client/$GOPACKAGE
 package parser
 
 import (
 	"fmt"
 
-	"github.com/Be3751/socket-capture-signals/internal/model"
+	"github.com/Be3751/MaP1058-socket-client/internal/model"
 )
 
 type Parser interface {

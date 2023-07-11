@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Be3751/socket-capture-signals/internal/adapter"
-	"github.com/Be3751/socket-capture-signals/internal/parser"
-	"github.com/Be3751/socket-capture-signals/internal/socket"
+	"github.com/Be3751/MaP1058-socket-client/internal/adapter"
+	"github.com/Be3751/MaP1058-socket-client/internal/parser"
+	"github.com/Be3751/MaP1058-socket-client/internal/socket"
 )
 
 // TODO: クライアント側のIPアドレスを自動取得する処理も必要
