@@ -31,7 +31,7 @@ func main() {
 		panic(err)
 	}
 	defer txtAdConn.Close()
-	fmt.Println("connected to text port!")
+	fmt.Printf("successful to connect to the txt server!: connection config=%+v\n", txtAdConf)
 
 	binAdConf := socket.SocketConfig{
 		ServerIP:   serverIP,
@@ -45,7 +45,7 @@ func main() {
 		panic(err)
 	}
 	defer binAdConn.Close()
-	fmt.Println("connected to bin port!")
+	fmt.Printf("successful to connect to the bin server!: connection config=%+v\n", binAdConf)
 
 	ctx := context.Background()
 	txtAdapter := adapter.NewTxtAdapter(txtAdConn)
