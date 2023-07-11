@@ -12,7 +12,6 @@ import (
 	"github.com/Be3751/socket-capture-signals/internal/socket"
 )
 
-// TODO: クライアント側のIPアドレスを自動取得する処理も必要
 func main() {
 	serverIP := "192.168.10.128"
 	clientIP, err := getMyLocalIP()
@@ -32,7 +31,7 @@ func main() {
 		panic(err)
 	}
 	defer txtAdConn.Close()
-	fmt.Println("connected to text port!")
+	fmt.Printf("successful to connect to the txt server!: connection config=%+v\n", txtAdConf)
 
 	binAdConf := socket.SocketConfig{
 		ServerIP:   serverIP,
@@ -46,7 +45,7 @@ func main() {
 		panic(err)
 	}
 	defer binAdConn.Close()
-	fmt.Println("connected to bin port!")
+	fmt.Printf("successful to connect to the bin server!: connection config=%+v\n", binAdConf)
 
 	ctx := context.Background()
 	txtAdapter := adapter.NewTxtAdapter(txtAdConn)
