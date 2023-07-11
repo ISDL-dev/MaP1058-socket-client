@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"net"
 	"time"
 
 	"github.com/Be3751/socket-capture-signals/internal/adapter"
@@ -14,39 +12,28 @@ import (
 
 // TODO: クライアント側のIPアドレスを自動取得する処理も必要
 func main() {
-	serverIP := "192.168.10.128"
-	clientIP, err := getMyLocalIP()
-	if err != nil {
-		fmt.Println(err)
-		panic(err)
-	}
 	txtAdConf := socket.SocketConfig{
-		ServerIP:   serverIP,
+		ServerIP:   "192.168.86.24",
 		ServerPort: "3000",
-		ClientIP:   clientIP,
-		ClientPort: 2000,
+		ClientIP:   "192.168.86.21",
+		ClientPort: 1000,
 	}
 	txtAdConn, err := socket.Connect(txtAdConf)
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
-	defer txtAdConn.Close()
-	fmt.Println("connected to text port!")
-
 	binAdConf := socket.SocketConfig{
-		ServerIP:   serverIP,
+		ServerIP:   "192.168.86.24",
 		ServerPort: "2200",
-		ClientIP:   clientIP,
-		ClientPort: 2100,
+		ClientIP:   "192.168.86.21",
+		ClientPort: 1000,
 	}
 	binAdConn, err := socket.Connect(binAdConf)
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
-	defer binAdConn.Close()
-	fmt.Println("connected to bin port!")
 
 	ctx := context.Background()
 	txtAdapter := adapter.NewTxtAdapter(txtAdConn)
@@ -77,43 +64,4 @@ func main() {
 		panic(err)
 	}
 
-}
-
-func getMyLocalIP() (string, error) {
-	interfaces, err := net.Interfaces()
-	if err != nil {
-		return "", err
-	}
-
-	for _, iface := range interfaces {
-		if iface.Flags&net.FlagUp == 0 {
-			continue
-		}
-		if iface.Flags&net.FlagLoopback != 0 {
-			continue
-		}
-
-		addrs, err := iface.Addrs()
-		if err != nil {
-			return "", err
-		}
-		for _, addr := range addrs {
-			var ip net.IP
-			switch v := addr.(type) {
-			case *net.IPNet:
-				ip = v.IP
-			case *net.IPAddr:
-				ip = v.IP
-			}
-			if ip == nil || ip.IsLoopback() {
-				continue
-			}
-			ip = ip.To4()
-			if ip == nil {
-				continue
-			}
-			return ip.String(), nil
-		}
-	}
-	return "", errors.New("you might not be connected to the network")
 }
