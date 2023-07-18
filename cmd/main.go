@@ -43,7 +43,7 @@ func main() {
 	})
 	binAdapter := adapter.NewBinAdapter(binAdConn, parser)
 
-	err = txtAdapter.StartRec(ctx, time.Second*60, "2023/07/11 15-00-00")
+	err = txtAdapter.StartRec(ctx, time.Second*60, time.Now())
 	if err != nil {
 		fmt.Println(err)
 		panic(err)

@@ -3,68 +3,82 @@ package adapter
 import (
 	"context"
 	"fmt"
-	"net"
+	"strconv"
+	"strings"
 	"time"
 
-	"github.com/Be3751/socket-capture-signals/internal/model"
+	"github.com/Be3751/MaP1058-socket-client/internal/model"
+	"github.com/Be3751/MaP1058-socket-client/internal/socket"
 )
 
 // テキストデータでトレンドデータの受信やコマンドの送受信をする
 type TxtAdapter interface {
-	StartRec(ctx context.Context, recTime time.Duration, recDateTime string) error
+	StartRec(ctx context.Context, recTime time.Duration, recDateTime time.Time) error
 	EndRec(ctx context.Context) error
 }
 
-func NewTxtAdapter(c *net.TCPConn) TxtAdapter {
+func NewTxtAdapter(c socket.Conn) TxtAdapter {
 	return &binAdapter{
 		Conn: c,
 	}
 }
 
 type binAdapter struct {
-	Conn *net.TCPConn
+	Conn socket.Conn
 }
 
-func (a *binAdapter) StartRec(ctx context.Context, recSecond time.Duration, recDateTime string) error {
-	// recDateTimeのフォーマットを整える
-	// var recDateTimeStr string
-
+func (a *binAdapter) StartRec(ctx context.Context, recSecond time.Duration, recDateTime time.Time) error {
+	recDateTimeParam := recDateTime.Format("2006/01/02 15-04-05")
+	recSecondParam := strSecond(recSecond)
 	sCmd := model.Command{
 		Name:   "START",
-		Params: []string{recSecond.String(), recDateTime},
+		Params: []string{recSecondParam, recDateTimeParam},
 	}
 	sCmdStr := sCmd.NewString()
 	_, err := a.Conn.Write([]byte(sCmdStr))
 	if err != nil {
 		return fmt.Errorf("failed to send %s: %w", sCmd, err)
 	}
-
-	var rCmd []byte
-	_, err = a.Conn.Read(rCmd)
+	buf := make([]byte, 128)
+	readLen, err := a.Conn.Read(buf)
 	if err != nil {
 		return fmt.Errorf("failed to receive command %w", err)
 	}
-	if string(rCmd) != sCmdStr {
-		return fmt.Errorf("failed to start recording")
+	rCmdStr := string(buf[:readLen])
+	if rCmdStr != sCmdStr {
+		return fmt.Errorf("failed to start recording because %s doesn't match with %s", rCmdStr, sCmdStr)
 	}
 	return nil
 }
 
 func (a *binAdapter) EndRec(ctx context.Context) error {
-	sCmd := "<SCMD>END:A:,,,,,,,,,</SCMD>"
-	_, err := a.Conn.Write([]byte(sCmd))
+	sCmd := model.Command{
+		Name: "END",
+	}
+	sCmdStr := sCmd.NewString()
+	_, err := a.Conn.Write([]byte(sCmdStr))
 	if err != nil {
 		return fmt.Errorf("failed to send %s: %w", sCmd, err)
 	}
-
-	var rCmd []byte
-	_, err = a.Conn.Read(rCmd)
+	buf := make([]byte, 128)
+	readLen, err := a.Conn.Read(buf)
 	if err != nil {
 		return fmt.Errorf("failed to receive command %w", err)
 	}
-	if string(rCmd) != sCmd {
+	rCmdStr := string(buf[:readLen])
+	if string(rCmdStr) != sCmdStr {
 		return fmt.Errorf("failed to end recording")
 	}
-
 	return nil
+}
+
+func strSecond(d time.Duration) string {
+	var secondStr string
+	if d >= time.Minute {
+		second := int64(d) / int64(time.Second)
+		secondStr = strconv.Itoa(int(second))
+	} else {
+		secondStr = strings.Replace(d.String(), "s", "", -1)
+	}
+	return secondStr
 }
