@@ -7,6 +7,11 @@ type Command struct {
 	Params []string
 }
 
+const (
+	// パラメータを分割するカンマの数
+	NumSeparator = 9
+)
+
 func (c *Command) String() string {
 	var paramsStr string
 	var paramCnt int
@@ -14,7 +19,7 @@ func (c *Command) String() string {
 		paramsStr += p + ","
 		paramCnt++
 	}
-	for i := 0; i < (10-paramCnt)-1; i++ {
+	for i := 0; i < NumSeparator-paramCnt; i++ {
 		paramsStr += ","
 	}
 	return fmt.Sprintf("<SCMD>%s:A:%s</SCMD>", c.Name, paramsStr)
