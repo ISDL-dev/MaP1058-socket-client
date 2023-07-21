@@ -7,7 +7,7 @@ type Command struct {
 	Params []string
 }
 
-func (c *Command) NewString() string {
+func (c *Command) String() string {
 	var paramsStr string
 	var paramCnt int
 	for _, p := range c.Params {

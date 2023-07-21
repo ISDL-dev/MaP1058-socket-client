@@ -34,7 +34,7 @@ func (a *binAdapter) StartRec(ctx context.Context, recSecond time.Duration, recD
 		Name:   "START",
 		Params: []string{recSecondParam, recDateTimeParam},
 	}
-	sCmdStr := sCmd.NewString()
+	sCmdStr := sCmd.String()
 	_, err := a.Conn.Write([]byte(sCmdStr))
 	if err != nil {
 		return fmt.Errorf("failed to send %s: %w", sCmd, err)
@@ -55,7 +55,7 @@ func (a *binAdapter) EndRec(ctx context.Context) error {
 	sCmd := model.Command{
 		Name: "END",
 	}
-	sCmdStr := sCmd.NewString()
+	sCmdStr := sCmd.String()
 	_, err := a.Conn.Write([]byte(sCmdStr))
 	if err != nil {
 		return fmt.Errorf("failed to send %s: %w", sCmd, err)
