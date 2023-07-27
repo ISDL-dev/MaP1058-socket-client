@@ -19,8 +19,20 @@ type parser struct {
 }
 
 type ParseConfig struct {
-	// 1受信あたりに得られる信号のバイト数
+	Signal Signal
+}
+
+type Signal struct {
+	// 受信信号のバイト数
 	SumBytes uint64
-	// 1受信あたりに得られる信号に含まれるサムチェックコードのバイト数
+	// 受信信号に含まれるサムチェックコードのバイト数
 	SumCheckCodeSize uint64
+	// 受信信号におけるポイント数
+	NumPoints uint64
+	// 受信信号における総チャンネル数
+	NumChannels uint64
+	// 受信信号における有効チャンネルのインデックス
+	IndexAvailableChs []int
+	// サムチェックに使用するポイントのインデックス
+	IndexPntsSumCheck []int
 }

@@ -38,8 +38,14 @@ func main() {
 	ctx := context.Background()
 	txtAdapter := adapter.NewTxtAdapter(txtAdConn)
 	parser := parser.NewParser(parser.ParseConfig{
-		SumBytes:         1604,
-		SumCheckCodeSize: 4,
+		Signal: parser.Signal{
+			SumBytes:          1604,
+			SumCheckCodeSize:  4,
+			NumPoints:         50,
+			NumChannels:       16,
+			IndexAvailableChs: []int{0, 1, 2, 3, 4, 5, 6, 7},
+			IndexPntsSumCheck: []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+		},
 	})
 	binAdapter := adapter.NewBinAdapter(binAdConn, parser)
 

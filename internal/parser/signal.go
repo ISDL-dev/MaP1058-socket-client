@@ -11,38 +11,37 @@ import (
 
 // AD値のバイト列を解析してAD値を持つmodel.Signals型のポインタを返す
 func (p *parser) ToSignals(adSignals []byte) (*model.Signals, error) {
-	if len(adSignals) != int(p.Config.SumBytes) {
-		return nil, fmt.Errorf("adSignals' len must be %d", p.Config.SumBytes)
+	if len(adSignals) != int(p.Config.Signal.SumBytes) {
+		return nil, fmt.Errorf("adSignals' len must be %d", p.Config.Signal.SumBytes)
 	}
+
+	signalBuf := bytes.NewBuffer(adSignals[:p.Config.Signal.SumBytes-p.Config.Signal.SumCheckCodeSize])
 	result := &model.Signals{}
 	var sum uint16
-	for i := 0; i < int(p.Config.SumBytes)-int(p.Config.SumCheckCodeSize); i += 32 {
-		for j := 0; j < 16; j += 2 {
+	for pnt := 0; pnt < int(p.Config.Signal.NumPoints); pnt++ {
+		for ch := 0; ch < len(p.Config.Signal.IndexAvailableChs); ch++ {
 			var adValue uint16
-			buf := bytes.NewBuffer(adSignals[i+j : i+j+2])
-			err := binary.Read(buf, binary.BigEndian, &adValue)
+			err := binary.Read(signalBuf, binary.BigEndian, &adValue)
 			if err != nil {
 				return nil, fmt.Errorf("failed to read binary: %w", err)
 			}
-
-			ch := int(j / 2)
-			pnt := int(i / 32)
 			result.Channels[ch].ADValues[pnt] = adValue
-
-			if pnt < 10 {
+			if pnt < len(p.Config.Signal.IndexPntsSumCheck) {
 				sum += adValue
 			}
 		}
+		signalBuf.Next((int(p.Config.Signal.NumChannels) - len(p.Config.Signal.IndexAvailableChs)) * 2) // 後半8個のチャンネルは未使用
 	}
-	var valueSumCheckCode uint16
-	buf := bytes.NewBuffer(adSignals[p.Config.SumBytes-p.Config.SumCheckCodeSize+2:])
-	err := binary.Read(buf, binary.BigEndian, &valueSumCheckCode)
+
+	var valueSumCheckCode uint32
+	sumCheckBuf := bytes.NewBuffer(adSignals[p.Config.Signal.SumBytes-p.Config.Signal.SumCheckCodeSize:])
+	err := binary.Read(sumCheckBuf, binary.BigEndian, &valueSumCheckCode)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read binary: %w", err)
 	}
 
-	if valueSumCheckCode != sum {
-		return nil, &FailureSumCheckError{Expected: valueSumCheckCode, Actual: sum}
+	if int(valueSumCheckCode) != int(sum) {
+		return nil, &FailureSumCheckError{Expected: uint16(valueSumCheckCode), Actual: sum}
 	}
 	return result, nil
 }
