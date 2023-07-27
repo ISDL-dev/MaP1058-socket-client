@@ -1,4 +1,4 @@
-module github.com/Be3751/socket-capture-signals
+module github.com/Be3751/MaP1058-socket-client
 
 go 1.18
 

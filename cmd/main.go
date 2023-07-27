@@ -7,9 +7,9 @@ import (
 	"net"
 	"time"
 
-	"github.com/Be3751/socket-capture-signals/internal/adapter"
-	"github.com/Be3751/socket-capture-signals/internal/parser"
-	"github.com/Be3751/socket-capture-signals/internal/socket"
+	"github.com/Be3751/MaP1058-socket-client/internal/adapter"
+	"github.com/Be3751/MaP1058-socket-client/internal/parser"
+	"github.com/Be3751/MaP1058-socket-client/internal/socket"
 )
 
 func main() {
@@ -55,7 +55,7 @@ func main() {
 	})
 	binAdapter := adapter.NewBinAdapter(binAdConn, parser)
 
-	err = txtAdapter.StartRec(ctx, time.Second*60, "2023/07/11 15-00-00")
+	err = txtAdapter.StartRec(ctx, time.Second*60, time.Now())
 	if err != nil {
 		fmt.Println(err)
 		panic(err)

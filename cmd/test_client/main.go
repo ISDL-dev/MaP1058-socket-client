@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Be3751/socket-capture-signals/internal/socket"
+	"github.com/Be3751/MaP1058-socket-client/internal/socket"
 )
 
 func main() {

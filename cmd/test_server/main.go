@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	utilsNet "github.com/Be3751/socket-capture-signals/utils/net"
+	utilsNet "github.com/Be3751/MaP1058-socket-client/utils/net"
 )
 
 func main() {

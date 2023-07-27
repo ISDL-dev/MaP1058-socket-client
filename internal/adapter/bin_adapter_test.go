@@ -4,10 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Be3751/socket-capture-signals/internal/model"
-	my_parser "github.com/Be3751/socket-capture-signals/internal/parser"
-	mock_parser "github.com/Be3751/socket-capture-signals/internal/parser/mock"
-	mock_socket "github.com/Be3751/socket-capture-signals/internal/socket/mock"
+	"github.com/Be3751/MaP1058-socket-client/internal/model"
+	my_parser "github.com/Be3751/MaP1058-socket-client/internal/parser"
+	mock_parser "github.com/Be3751/MaP1058-socket-client/internal/parser/mock"
+	mock_socket "github.com/Be3751/MaP1058-socket-client/internal/socket/mock"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )
@@ -15,7 +15,8 @@ import (
 func TestReceiveADValues(t *testing.T) {
 	t.Run("エラーなくAD値を受信する", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
-		socket := mock_socket.NewMockSocket(ctrl)
+		defer ctrl.Finish()
+		socket := mock_socket.NewMockConn(ctrl)
 		parser := mock_parser.NewMockParser(ctrl)
 		ctx := context.Background()
 		binAdapter := NewBinAdapter(socket, parser)
@@ -32,7 +33,8 @@ func TestReceiveADValues(t *testing.T) {
 
 	t.Run("サムチェックに失敗する", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
-		socket := mock_socket.NewMockSocket(ctrl)
+		defer ctrl.Finish()
+		socket := mock_socket.NewMockConn(ctrl)
 		parser := mock_parser.NewMockParser(ctrl)
 		ctx := context.Background()
 		binAdapter := NewBinAdapter(socket, parser)
