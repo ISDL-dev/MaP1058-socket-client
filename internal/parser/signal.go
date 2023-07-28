@@ -11,30 +11,30 @@ import (
 
 // AD値のバイト列を解析してAD値を持つmodel.Signals型のポインタを返す
 func (p *parser) ToSignals(adSignals []byte) (*model.Signals, error) {
-	if len(adSignals) != int(p.Config.Signal.SumBytes) {
-		return nil, fmt.Errorf("adSignals' len must be %d", p.Config.Signal.SumBytes)
+	if len(adSignals) != int(model.NumTotalBytes) {
+		return nil, fmt.Errorf("adSignals' len must be %d", model.NumTotalBytes)
 	}
 
-	signalBuf := bytes.NewBuffer(adSignals[:p.Config.Signal.SumBytes-p.Config.Signal.SumCheckCodeSize])
+	signalBuf := bytes.NewBuffer(adSignals[:model.NumTotalBytes-model.SumCheckCodeSize])
 	result := &model.Signals{}
 	var sum uint16
-	for pnt := 0; pnt < int(p.Config.Signal.NumPoints); pnt++ {
-		for ch := 0; ch < len(p.Config.Signal.IndexAvailableChs); ch++ {
+	for pnt := 0; pnt < int(model.NumPoints); pnt++ {
+		for ch := 0; ch < model.NumAvailableChs; ch++ {
 			var adValue uint16
 			err := binary.Read(signalBuf, binary.BigEndian, &adValue)
 			if err != nil {
 				return nil, fmt.Errorf("failed to read binary: %w", err)
 			}
 			result.Channels[ch].ADValues[pnt] = adValue
-			if pnt < len(p.Config.Signal.IndexPntsSumCheck) {
+			if pnt < model.NumPntsSumCheck {
 				sum += adValue
 			}
 		}
-		signalBuf.Next((int(p.Config.Signal.NumChannels) - len(p.Config.Signal.IndexAvailableChs)) * 2) // 後半8個のチャンネルは未使用
+		signalBuf.Next(int(model.NumChannels-model.NumAvailableChs) * model.NumADBytes) // 後半8個のチャンネルは未使用
 	}
 
 	var valueSumCheckCode uint32
-	sumCheckBuf := bytes.NewBuffer(adSignals[p.Config.Signal.SumBytes-p.Config.Signal.SumCheckCodeSize:])
+	sumCheckBuf := bytes.NewBuffer(adSignals[model.NumTotalBytes-model.SumCheckCodeSize:])
 	err := binary.Read(sumCheckBuf, binary.BigEndian, &valueSumCheckCode)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read binary: %w", err)

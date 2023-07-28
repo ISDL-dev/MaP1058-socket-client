@@ -28,7 +28,7 @@ type adapter struct {
 
 // AD値を受信する
 func (a *adapter) ReceiveADValues(ctx context.Context) (*model.Signals, error) {
-	rawBytes := make([]byte, model.SumBytes)
+	rawBytes := make([]byte, model.NumTotalBytes)
 	_, err := a.Conn.Read(rawBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to receive binary data %w", err)

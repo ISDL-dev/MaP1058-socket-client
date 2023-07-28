@@ -1,28 +1,33 @@
 package model
 
+import "time"
+
 const (
 	// 1回の受信に含まれるバイト数
-	SumBytes = (numCh * numPnt * adLen) + sumCheckCodeSize
-	// チャンネル数
-	numCh = 16
-	// 実際に利用可能なチャンネル数（16種類のうち1~8のみが利用可能）
-	numAvailableCh = 8
-	// 1回の受信で1つのチャンネルが取得できる信号の数
-	numPnt = 50
-	// AD値を意味するバイト列の長さ
-	adLen = 2
+	NumTotalBytes = (NumChannels * NumPoints * NumADBytes) + SumCheckCodeSize
+	// AD値と解釈するために必要なバイト数
+	NumADBytes = 2
 	// サムチェックコードを示すバイト列の長さ
-	sumCheckCodeSize = 4
+	SumCheckCodeSize = 4
+	// チャンネル数
+	NumChannels = 16
+	// 実際に利用可能なチャンネル数（16種類のうち1~8のみが利用可能）
+	NumAvailableChs = 8
+	// 1回の受信で1つのチャンネルが取得できる信号の数
+	NumPoints = 50
+	// 先頭の何ポイントまでの値をサムチェックに用いるか
+	NumPntsSumCheck = 10
 )
 
 // 送信バイナリーデータ1回分のAD値
 type Signals struct {
-	Channels [numAvailableCh]channelSignal
+	time     time.Time
+	Channels [NumAvailableChs]channelSignal
 }
 
 type channelSignal struct {
-	ADValues     [numPnt]uint16
-	Measurements [numPnt]float64
+	ADValues     [NumPoints]uint16
+	Measurements [NumPoints]float64
 }
 
 func (s *Signals) SetMeasurements(cal *Cal) error {
@@ -38,10 +43,11 @@ func (s *Signals) SetMeasurements(cal *Cal) error {
 
 // AD値から測定値に変換するための校正値
 type Cal struct {
-	Channels [numAvailableCh]channelCal
+	Channels [NumAvailableChs]channelCal
 }
 
 type channelCal struct {
+	time   time.Time
 	BaseAD uint16
 	CalAD  uint16
 	EuHi   float64

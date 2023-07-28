@@ -11,19 +11,9 @@ func TestToSignals(t *testing.T) {
 		sumBytes         = 1604
 		sumCheckCodeSize = 4
 	)
-	pConf := ParseConfig{
-		Signal: Signal{
-			SumBytes:          1604,
-			SumCheckCodeSize:  4,
-			NumPoints:         50,
-			NumChannels:       16,
-			IndexAvailableChs: []int{0, 1, 2, 3, 4, 5, 6, 7},
-			IndexPntsSumCheck: []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
-		},
-	}
 
 	t.Run("信号をパースする", func(t *testing.T) {
-		parser := NewParser(pConf)
+		parser := NewParser()
 		rawBytes := make([]byte, 1604)
 		for i := 0; i < sumBytes-sumCheckCodeSize; i += 32 {
 			for j := 0; j < 16; j++ {
@@ -41,14 +31,14 @@ func TestToSignals(t *testing.T) {
 	})
 
 	t.Run("規定の長さでないバイト列を受け取ってエラー", func(t *testing.T) {
-		parser := NewParser(pConf)
+		parser := NewParser()
 		rawBytes := []byte{0x00, 0x01, 0x02}
 		_, err := parser.ToSignals(rawBytes)
 		assert.Error(t, err)
 	})
 
 	t.Run("サムチェックの結果が合わずエラー", func(t *testing.T) {
-		parser := NewParser(pConf)
+		parser := NewParser()
 		rawBytes := make([]byte, 1604)
 		for i := 0; i < sumBytes-sumCheckCodeSize; i += 32 {
 			for j := 0; j < 16; j++ {
