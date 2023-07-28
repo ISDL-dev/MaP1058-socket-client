@@ -33,7 +33,8 @@ func (a *adapter) ReceiveADValues(ctx context.Context) (*model.Signals, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to receive binary data %w", err)
 	}
-	signals, err := a.Parser.ToSignals(rawBytes)
+	signals := model.NewSignals()
+	err = a.Parser.ToSignals(rawBytes, &signals)
 	if err != nil {
 		if e, ok := err.(*parser.FailureSumCheckError); ok {
 			if err := a.sendNAK(); err != nil {
@@ -46,7 +47,7 @@ func (a *adapter) ReceiveADValues(ctx context.Context) (*model.Signals, error) {
 	if err != nil {
 		return nil, err
 	}
-	return signals, nil
+	return &signals, nil
 }
 
 func (a *adapter) sendACK() error {

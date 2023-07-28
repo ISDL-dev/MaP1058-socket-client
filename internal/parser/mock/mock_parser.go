@@ -35,16 +35,15 @@ func (m *MockParser) EXPECT() *MockParserMockRecorder {
 }
 
 // ToSignals mocks base method.
-func (m *MockParser) ToSignals(adSignals []byte) (*model.Signals, error) {
+func (m *MockParser) ToSignals(b []byte, s *model.Signals) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ToSignals", adSignals)
-	ret0, _ := ret[0].(*model.Signals)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret := m.ctrl.Call(m, "ToSignals", b, s)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // ToSignals indicates an expected call of ToSignals.
-func (mr *MockParserMockRecorder) ToSignals(adSignals interface{}) *gomock.Call {
+func (mr *MockParserMockRecorder) ToSignals(b, s interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ToSignals", reflect.TypeOf((*MockParser)(nil).ToSignals), adSignals)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ToSignals", reflect.TypeOf((*MockParser)(nil).ToSignals), b, s)
 }

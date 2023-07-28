@@ -3,6 +3,7 @@ package parser
 import (
 	"testing"
 
+	"github.com/Be3751/MaP1058-socket-client/internal/model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,14 +27,16 @@ func TestToSignals(t *testing.T) {
 		}
 		rawBytes[sumBytes-2] = 0x00
 		rawBytes[sumBytes-1] = 0x50
-		_, err := parser.ToSignals(rawBytes)
+		signals := model.NewSignals()
+		err := parser.ToSignals(rawBytes, &signals)
 		assert.NoError(t, err)
 	})
 
 	t.Run("規定の長さでないバイト列を受け取ってエラー", func(t *testing.T) {
 		parser := NewParser()
 		rawBytes := []byte{0x00, 0x01, 0x02}
-		_, err := parser.ToSignals(rawBytes)
+		signals := model.NewSignals()
+		err := parser.ToSignals(rawBytes, &signals)
 		assert.Error(t, err)
 	})
 
@@ -47,7 +50,8 @@ func TestToSignals(t *testing.T) {
 		}
 		rawBytes[sumBytes-2] = 0x00
 		rawBytes[sumBytes-1] = 0x50
-		_, err := parser.ToSignals(rawBytes)
+		signals := model.NewSignals()
+		err := parser.ToSignals(rawBytes, &signals)
 		assert.EqualValues(t, &FailureSumCheckError{Expected: 80, Actual: 257 * 80}, err)
 	})
 }

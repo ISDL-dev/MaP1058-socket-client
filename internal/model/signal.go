@@ -19,9 +19,16 @@ const (
 	NumPntsSumCheck = 10
 )
 
+func NewSignals() Signals {
+	return Signals{
+		Time:     time.Now(),
+		Channels: [NumAvailableChs]channelSignal{},
+	}
+}
+
 // 送信バイナリーデータ1回分のAD値
 type Signals struct {
-	time     time.Time
+	Time     time.Time
 	Channels [NumAvailableChs]channelSignal
 }
 
@@ -47,7 +54,6 @@ type Cal struct {
 }
 
 type channelCal struct {
-	time   time.Time
 	BaseAD uint16
 	CalAD  uint16
 	EuHi   float64
