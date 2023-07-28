@@ -9,42 +9,39 @@ import (
 	"github.com/Be3751/MaP1058-socket-client/internal/model"
 )
 
-// AD値のバイト列を解析してAD値を持つmodel.Signals型のポインタを返す
-func (p *parser) ToSignals(adSignals []byte) (*model.Signals, error) {
-	if len(adSignals) != int(p.Config.SumBytes) {
-		return nil, fmt.Errorf("adSignals' len must be %d", p.Config.SumBytes)
+func (p *parser) ToSignals(b []byte, s *model.Signals) error {
+	if len(b) != int(model.NumTotalBytes) {
+		return fmt.Errorf("the arg b's len must be %d", model.NumTotalBytes)
 	}
-	result := &model.Signals{}
+
+	signalBuf := bytes.NewBuffer(b[:model.NumTotalBytes-model.SumCheckCodeSize])
 	var sum uint16
-	for i := 0; i < int(p.Config.SumBytes)-int(p.Config.SumCheckCodeSize); i += 32 {
-		for j := 0; j < 16; j += 2 {
+	for pnt := 0; pnt < int(model.NumPoints); pnt++ {
+		for ch := 0; ch < model.NumAvailableChs; ch++ {
 			var adValue uint16
-			buf := bytes.NewBuffer(adSignals[i+j : i+j+2])
-			err := binary.Read(buf, binary.BigEndian, &adValue)
+			err := binary.Read(signalBuf, binary.BigEndian, &adValue)
 			if err != nil {
-				return nil, fmt.Errorf("failed to read binary: %w", err)
+				return fmt.Errorf("failed to read binary: %w", err)
 			}
-
-			ch := int(j / 2)
-			pnt := int(i / 32)
-			result.Channels[ch].ADValues[pnt] = adValue
-
-			if pnt < 10 {
+			s.Channels[ch].ADValues[pnt] = adValue
+			if pnt < model.NumPntsSumCheck {
 				sum += adValue
 			}
 		}
-	}
-	var valueSumCheckCode uint16
-	buf := bytes.NewBuffer(adSignals[p.Config.SumBytes-p.Config.SumCheckCodeSize+2:])
-	err := binary.Read(buf, binary.BigEndian, &valueSumCheckCode)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read binary: %w", err)
+		signalBuf.Next(int(model.NumChannels-model.NumAvailableChs) * model.NumADBytes) // 後半8個のチャンネルは未使用
 	}
 
-	if valueSumCheckCode != sum {
-		return nil, &FailureSumCheckError{Expected: valueSumCheckCode, Actual: sum}
+	var valueSumCheckCode uint32
+	sumCheckBuf := bytes.NewBuffer(b[model.NumTotalBytes-model.SumCheckCodeSize:])
+	err := binary.Read(sumCheckBuf, binary.BigEndian, &valueSumCheckCode)
+	if err != nil {
+		return fmt.Errorf("failed to read binary: %w", err)
 	}
-	return result, nil
+
+	if int(valueSumCheckCode) != int(sum) {
+		return &FailureSumCheckError{Expected: uint16(valueSumCheckCode), Actual: sum}
+	}
+	return nil
 }
 
 type FailureSumCheckError struct {

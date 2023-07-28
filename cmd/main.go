@@ -49,10 +49,7 @@ func main() {
 
 	ctx := context.Background()
 	txtAdapter := adapter.NewTxtAdapter(txtAdConn)
-	parser := parser.NewParser(parser.ParseConfig{
-		SumBytes:         1604,
-		SumCheckCodeSize: 4,
-	})
+	parser := parser.NewParser()
 	binAdapter := adapter.NewBinAdapter(binAdConn, parser)
 
 	err = txtAdapter.StartRec(ctx, time.Second*60, time.Now())

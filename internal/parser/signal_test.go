@@ -3,6 +3,7 @@ package parser
 import (
 	"testing"
 
+	"github.com/Be3751/MaP1058-socket-client/internal/model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -13,12 +14,7 @@ func TestToSignals(t *testing.T) {
 	)
 
 	t.Run("信号をパースする", func(t *testing.T) {
-		pConf := ParseConfig{
-			SumBytes:         sumBytes,
-			SumCheckCodeSize: sumCheckCodeSize,
-		}
-		parser := NewParser(pConf)
-
+		parser := NewParser()
 		rawBytes := make([]byte, 1604)
 		for i := 0; i < sumBytes-sumCheckCodeSize; i += 32 {
 			for j := 0; j < 16; j++ {
@@ -31,29 +27,21 @@ func TestToSignals(t *testing.T) {
 		}
 		rawBytes[sumBytes-2] = 0x00
 		rawBytes[sumBytes-1] = 0x50
-
-		_, err := parser.ToSignals(rawBytes)
+		signals := model.NewSignals()
+		err := parser.ToSignals(rawBytes, &signals)
 		assert.NoError(t, err)
 	})
 
 	t.Run("規定の長さでないバイト列を受け取ってエラー", func(t *testing.T) {
-		pConf := ParseConfig{
-			SumBytes:         sumBytes,
-			SumCheckCodeSize: sumCheckCodeSize,
-		}
-		parser := NewParser(pConf)
+		parser := NewParser()
 		rawBytes := []byte{0x00, 0x01, 0x02}
-		_, err := parser.ToSignals(rawBytes)
+		signals := model.NewSignals()
+		err := parser.ToSignals(rawBytes, &signals)
 		assert.Error(t, err)
 	})
 
 	t.Run("サムチェックの結果が合わずエラー", func(t *testing.T) {
-		pConf := ParseConfig{
-			SumBytes:         sumBytes,
-			SumCheckCodeSize: sumCheckCodeSize,
-		}
-		parser := NewParser(pConf)
-
+		parser := NewParser()
 		rawBytes := make([]byte, 1604)
 		for i := 0; i < sumBytes-sumCheckCodeSize; i += 32 {
 			for j := 0; j < 16; j++ {
@@ -62,8 +50,8 @@ func TestToSignals(t *testing.T) {
 		}
 		rawBytes[sumBytes-2] = 0x00
 		rawBytes[sumBytes-1] = 0x50
-
-		_, err := parser.ToSignals(rawBytes)
+		signals := model.NewSignals()
+		err := parser.ToSignals(rawBytes, &signals)
 		assert.EqualValues(t, &FailureSumCheckError{Expected: 80, Actual: 257 * 80}, err)
 	})
 }

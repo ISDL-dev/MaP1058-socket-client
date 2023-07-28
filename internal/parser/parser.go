@@ -4,23 +4,13 @@ package parser
 import "github.com/Be3751/MaP1058-socket-client/internal/model"
 
 type Parser interface {
-	ToSignals(adSignals []byte) (*model.Signals, error)
+	// AD値のバイト列を解析してAD値を持つmodel.Signals型のポインタを返す
+	ToSignals(b []byte, s *model.Signals) error
 }
 
-func NewParser(c ParseConfig) Parser {
-	return &parser{
-		Config: c,
-	}
+func NewParser() Parser {
+	return &parser{}
 }
 
 type parser struct {
-	// 解析に必要な設定値
-	Config ParseConfig
-}
-
-type ParseConfig struct {
-	// 1受信あたりに得られる信号のバイト数
-	SumBytes uint64
-	// 1受信あたりに得られる信号に含まれるサムチェックコードのバイト数
-	SumCheckCodeSize uint64
 }

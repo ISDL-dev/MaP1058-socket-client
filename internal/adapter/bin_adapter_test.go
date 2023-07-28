@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/Be3751/MaP1058-socket-client/internal/model"
 	my_parser "github.com/Be3751/MaP1058-socket-client/internal/parser"
 	mock_parser "github.com/Be3751/MaP1058-socket-client/internal/parser/mock"
 	mock_socket "github.com/Be3751/MaP1058-socket-client/internal/socket/mock"
@@ -23,7 +22,7 @@ func TestReceiveADValues(t *testing.T) {
 
 		buf := make([]byte, 1604)
 		socket.EXPECT().Read(buf).Return(1604, nil)
-		parser.EXPECT().ToSignals(buf).Return(&model.Signals{}, nil)
+		parser.EXPECT().ToSignals(buf, gomock.Any()).Return(nil)
 		socket.EXPECT().Write([]byte("ACK")).Return(3, nil)
 
 		signals, err := binAdapter.ReceiveADValues(ctx)
@@ -41,10 +40,7 @@ func TestReceiveADValues(t *testing.T) {
 
 		buf := make([]byte, 1604)
 		socket.EXPECT().Read(buf).Return(1604, nil)
-		parser.EXPECT().ToSignals(buf).Return(
-			nil,
-			&my_parser.FailureSumCheckError{Expected: 100, Actual: 10},
-		)
+		parser.EXPECT().ToSignals(buf, gomock.Any()).Return(&my_parser.FailureSumCheckError{Expected: 100, Actual: 10})
 		socket.EXPECT().Write([]byte("NAK")).Return(3, nil)
 
 		signals, err := binAdapter.ReceiveADValues(ctx)
