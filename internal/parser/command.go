@@ -22,10 +22,7 @@ func (p *parser) ToCommand(s string) (*model.Command, error) {
 	nameAndParams := strings.Split(s, ":A:")
 	name := nameAndParams[0]
 	paramsStr := nameAndParams[1]
-	sliceParams := strings.Split(paramsStr, ",")
 	var params [model.NumSeparator + 1]string
-	for i, p := range sliceParams {
-		params[i] = p
-	}
+	copy(params[:], strings.Split(paramsStr, ","))
 	return &model.Command{Name: name, Params: params}, nil
 }
