@@ -4,7 +4,7 @@ import "fmt"
 
 type Command struct {
 	Name   string
-	Params []string
+	Params [NumSeparator + 1]string
 }
 
 const (
@@ -14,13 +14,12 @@ const (
 
 func (c *Command) String() string {
 	var paramsStr string
-	var paramCnt int
-	for _, p := range c.Params {
-		paramsStr += p + ","
-		paramCnt++
-	}
-	for i := 0; i < NumSeparator-paramCnt; i++ {
-		paramsStr += ","
+	for i, p := range c.Params {
+		if i == NumSeparator {
+			paramsStr += p
+		} else {
+			paramsStr += p + ","
+		}
 	}
 	return fmt.Sprintf("<SCMD>%s:A:%s</SCMD>", c.Name, paramsStr)
 }

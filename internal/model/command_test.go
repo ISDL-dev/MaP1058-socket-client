@@ -10,7 +10,7 @@ func TestNewString(t *testing.T) {
 	t.Run("START", func(t *testing.T) {
 		cmd := Command{
 			Name: "START",
-			Params: []string{
+			Params: [10]string{
 				"300",
 				"2023/01/01 12-00-00",
 			},
