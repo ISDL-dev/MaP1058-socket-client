@@ -37,25 +37,11 @@ type channelSignal struct {
 	Measurements [NumPoints]float64
 }
 
-func (s *Signals) SetMeasurements(cal *Cal) error {
+func (s *Signals) SetMeasurements(cal Cal) {
 	for i, ch := range s.Channels {
 		for j, adV := range ch.ADValues {
-			chCal := cal.Channels[i]
-			m := float64(adV-chCal.BaseAD)*(chCal.EuHi-chCal.EuLo)/float64(chCal.CalAD) + chCal.EuLo
-			ch.Measurements[j] = m
+			chCal := cal[i]
+			ch.Measurements[j] = (float64(adV)-chCal.BaseAD)*(chCal.EuHi-chCal.EuLo)/chCal.CalAD + chCal.EuLo
 		}
 	}
-	return nil
-}
-
-// AD値から測定値に変換するための校正値
-type Cal struct {
-	Channels [NumAvailableChs]channelCal
-}
-
-type channelCal struct {
-	BaseAD uint16
-	CalAD  uint16
-	EuHi   float64
-	EuLo   float64
 }
