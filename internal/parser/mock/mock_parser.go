@@ -34,6 +34,21 @@ func (m *MockParser) EXPECT() *MockParserMockRecorder {
 	return m.recorder
 }
 
+// ToCommand mocks base method.
+func (m *MockParser) ToCommand(s string) (*model.Command, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ToCommand", s)
+	ret0, _ := ret[0].(*model.Command)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ToCommand indicates an expected call of ToCommand.
+func (mr *MockParserMockRecorder) ToCommand(s interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ToCommand", reflect.TypeOf((*MockParser)(nil).ToCommand), s)
+}
+
 // ToSignals mocks base method.
 func (m *MockParser) ToSignals(b []byte, s *model.Signals) error {
 	m.ctrl.T.Helper()

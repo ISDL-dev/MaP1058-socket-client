@@ -32,7 +32,7 @@ func (a *binAdapter) StartRec(ctx context.Context, recSecond time.Duration, recD
 	recSecondParam := strSecond(recSecond)
 	sCmd := model.Command{
 		Name:   "START",
-		Params: []string{recSecondParam, recDateTimeParam},
+		Params: [model.NumSeparator + 1]string{recSecondParam, recDateTimeParam},
 	}
 	sCmdStr := sCmd.String()
 	_, err := a.Conn.Write([]byte(sCmdStr))

@@ -4,7 +4,7 @@ import "fmt"
 
 type Command struct {
 	Name   string
-	Params []string
+	Params [NumSeparator + 1]string
 }
 
 const (
