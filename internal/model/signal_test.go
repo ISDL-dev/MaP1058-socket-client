@@ -53,12 +53,3 @@ func TestSetMeasurements(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
-
-func randomRawBytes(signalByteSize int, sumCheckCodeSize int) []byte {
-	rawBytes := make([]byte, signalByteSize)
-	for i := 0; i < signalByteSize; i++ {
-		// TODO: byte型の乱数を生成する
-		rawBytes = append(rawBytes)
-	}
-	return rawBytes
-}
