@@ -19,10 +19,9 @@ const (
 	NumPntsSumCheck = 10
 )
 
-func NewSignals() Signals {
-	return Signals{
-		Time:     time.Now(),
-		Channels: [NumAvailableChs]channelSignal{},
+func NewSignals() *Signals {
+	return &Signals{
+		Time: time.Now(),
 	}
 }
 
