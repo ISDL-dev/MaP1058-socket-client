@@ -36,8 +36,8 @@ func main() {
 	}
 
 	ctx := context.Background()
-	txtAdapter := adapter.NewTxtAdapter(txtAdConn)
 	parser := parser.NewParser()
+	txtAdapter := adapter.NewTxtAdapter(txtAdConn, parser)
 	binAdapter := adapter.NewBinAdapter(binAdConn, parser)
 
 	err = txtAdapter.StartRec(ctx, time.Second*60, time.Now())
