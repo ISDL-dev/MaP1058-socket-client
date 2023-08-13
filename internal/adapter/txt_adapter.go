@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Be3751/MaP1058-socket-client/internal/model"
+	"github.com/Be3751/MaP1058-socket-client/internal/parser"
 	"github.com/Be3751/MaP1058-socket-client/internal/socket"
 )
 
@@ -15,16 +16,19 @@ import (
 type TxtAdapter interface {
 	StartRec(ctx context.Context, recTime time.Duration, recDateTime time.Time) error
 	EndRec(ctx context.Context) error
+	GetStatus(ctx context.Context) (model.Status, error)
 }
 
-func NewTxtAdapter(c socket.Conn) TxtAdapter {
+func NewTxtAdapter(c socket.Conn, p parser.Parser) TxtAdapter {
 	return &binAdapter{
-		Conn: c,
+		Conn:   c,
+		Parser: p,
 	}
 }
 
 type binAdapter struct {
-	Conn socket.Conn
+	Conn   socket.Conn
+	Parser parser.Parser
 }
 
 func (a *binAdapter) StartRec(ctx context.Context, recSecond time.Duration, recDateTime time.Time) error {
@@ -70,6 +74,30 @@ func (a *binAdapter) EndRec(ctx context.Context) error {
 		return fmt.Errorf("failed to end recording")
 	}
 	return nil
+}
+
+func (a *binAdapter) GetStatus(ctx context.Context) (model.Status, error) {
+	sCmd := model.Command{
+		Name: "STATUS",
+	}
+	sCmdStr := sCmd.String()
+	_, err := a.Conn.Write([]byte(sCmdStr))
+	if err != nil {
+		return "", fmt.Errorf("failed to send %s: %w", sCmd, err)
+	}
+
+	buf := make([]byte, 128)
+	readLen, err := a.Conn.Read(buf)
+	if err != nil {
+		return "", fmt.Errorf("failed to send %s: %w", sCmd, err)
+	}
+	rCmdStr := string(buf[:readLen])
+	rCmd, err := a.Parser.ToCommand(rCmdStr)
+	if err != nil {
+		return "", fmt.Errorf("failed to convert %s to Command: %w", rCmdStr, err)
+	}
+	status := rCmd.Params[0]
+	return model.Status(status), nil
 }
 
 func strSecond(d time.Duration) string {
