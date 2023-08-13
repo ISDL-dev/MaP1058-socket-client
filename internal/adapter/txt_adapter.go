@@ -20,18 +20,18 @@ type TxtAdapter interface {
 }
 
 func NewTxtAdapter(c socket.Conn, p parser.Parser) TxtAdapter {
-	return &binAdapter{
+	return &txtAdapter{
 		Conn:   c,
 		Parser: p,
 	}
 }
 
-type binAdapter struct {
+type txtAdapter struct {
 	Conn   socket.Conn
 	Parser parser.Parser
 }
 
-func (a *binAdapter) StartRec(ctx context.Context, recSecond time.Duration, recDateTime time.Time) error {
+func (a *txtAdapter) StartRec(ctx context.Context, recSecond time.Duration, recDateTime time.Time) error {
 	recDateTimeParam := recDateTime.Format("2006/01/02 15-04-05")
 	recSecondParam := strSecond(recSecond)
 	sCmd := model.Command{
@@ -55,7 +55,7 @@ func (a *binAdapter) StartRec(ctx context.Context, recSecond time.Duration, recD
 	return nil
 }
 
-func (a *binAdapter) EndRec(ctx context.Context) error {
+func (a *txtAdapter) EndRec(ctx context.Context) error {
 	sCmd := model.Command{
 		Name: "END",
 	}
@@ -76,7 +76,7 @@ func (a *binAdapter) EndRec(ctx context.Context) error {
 	return nil
 }
 
-func (a *binAdapter) GetStatus(ctx context.Context) (model.Status, error) {
+func (a *txtAdapter) GetStatus(ctx context.Context) (model.Status, error) {
 	sCmd := model.Command{
 		Name: "STATUS",
 	}

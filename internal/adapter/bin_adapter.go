@@ -15,19 +15,19 @@ type BinAdapter interface {
 }
 
 func NewBinAdapter(c socket.Conn, p parser.Parser) BinAdapter {
-	return &adapter{
+	return &binAdapter{
 		Conn:   c,
 		Parser: p,
 	}
 }
 
-type adapter struct {
+type binAdapter struct {
 	Conn   socket.Conn
 	Parser parser.Parser
 }
 
 // AD値を受信する
-func (a *adapter) ReceiveADValues(ctx context.Context) (*model.Signals, error) {
+func (a *binAdapter) ReceiveADValues(ctx context.Context) (*model.Signals, error) {
 	rawBytes := make([]byte, model.NumTotalBytes)
 	_, err := a.Conn.Read(rawBytes)
 	if err != nil {
@@ -50,7 +50,7 @@ func (a *adapter) ReceiveADValues(ctx context.Context) (*model.Signals, error) {
 	return signals, nil
 }
 
-func (a *adapter) sendACK() error {
+func (a *binAdapter) sendACK() error {
 	_, err := a.Conn.Write([]byte("ACK"))
 	if err != nil {
 		return fmt.Errorf("failed to write connection ACK: %w", err)
@@ -58,7 +58,7 @@ func (a *adapter) sendACK() error {
 	return nil
 }
 
-func (a *adapter) sendNAK() error {
+func (a *binAdapter) sendNAK() error {
 	_, err := a.Conn.Write([]byte("NAK"))
 	if err != nil {
 		return fmt.Errorf("failed to write connection NAK: %w", err)
