@@ -3,6 +3,7 @@ package adapter
 import (
 	"context"
 	"fmt"
+	"io"
 
 	"github.com/Be3751/MaP1058-socket-client/internal/model"
 	"github.com/Be3751/MaP1058-socket-client/internal/parser"
@@ -29,12 +30,16 @@ type binAdapter struct {
 // AD値を受信する
 func (a *binAdapter) ReceiveADValues(ctx context.Context) (*model.Signals, error) {
 	rawBytes := make([]byte, model.NumTotalBytes)
-	_, err := a.Conn.Read(rawBytes)
-	if err != nil {
+	n, err := a.Conn.Read(rawBytes)
+	if err != nil && err != io.EOF {
 		return nil, fmt.Errorf("failed to receive binary data %w", err)
 	}
+	if n == 0 {
+		return nil, nil
+	}
+
 	signals := model.NewSignals()
-	err = a.Parser.ToSignals(rawBytes, signals)
+	err = a.Parser.ToSignals(rawBytes[:n], signals)
 	if err != nil {
 		if e, ok := err.(*parser.FailureSumCheckError); ok {
 			if err := a.sendNAK(); err != nil {
