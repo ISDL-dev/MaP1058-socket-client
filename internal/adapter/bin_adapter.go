@@ -56,7 +56,7 @@ func (a *binAdapter) ReceiveADValues(ctx context.Context) (*model.Signals, error
 }
 
 func (a *binAdapter) sendACK() error {
-	_, err := a.Conn.Write([]byte("ACK"))
+	_, err := a.Conn.Write([]byte{0x06})
 	if err != nil {
 		return fmt.Errorf("failed to write connection ACK: %w", err)
 	}
@@ -64,7 +64,7 @@ func (a *binAdapter) sendACK() error {
 }
 
 func (a *binAdapter) sendNAK() error {
-	_, err := a.Conn.Write([]byte("NAK"))
+	_, err := a.Conn.Write([]byte{0x15})
 	if err != nil {
 		return fmt.Errorf("failed to write connection NAK: %w", err)
 	}

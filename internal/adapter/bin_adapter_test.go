@@ -23,7 +23,7 @@ func TestReceiveADValues(t *testing.T) {
 		buf := make([]byte, 1604)
 		socket.EXPECT().Read(buf).Return(1604, nil)
 		parser.EXPECT().ToSignals(buf, gomock.Any()).Return(nil)
-		socket.EXPECT().Write([]byte("ACK")).Return(3, nil)
+		socket.EXPECT().Write([]byte{0x06}).Return(1, nil)
 
 		signals, err := binAdapter.ReceiveADValues(ctx)
 		assert.NoError(t, err)
@@ -41,7 +41,7 @@ func TestReceiveADValues(t *testing.T) {
 		buf := make([]byte, 1604)
 		socket.EXPECT().Read(buf).Return(1604, nil)
 		parser.EXPECT().ToSignals(buf, gomock.Any()).Return(&my_parser.FailureSumCheckError{Expected: 100, Actual: 10})
-		socket.EXPECT().Write([]byte("NAK")).Return(3, nil)
+		socket.EXPECT().Write([]byte{0x15}).Return(1, nil)
 
 		signals, err := binAdapter.ReceiveADValues(ctx)
 		assert.Error(t, err)
