@@ -8,32 +8,48 @@ import (
 	"github.com/Be3751/MaP1058-socket-client/internal/adapter"
 	"github.com/Be3751/MaP1058-socket-client/internal/parser"
 	"github.com/Be3751/MaP1058-socket-client/internal/socket"
+	"github.com/Be3751/MaP1058-socket-client/utils/net"
 )
 
 // TODO: クライアント側のIPアドレスを自動取得する処理も必要
 func main() {
+	clientIP, err := net.GetMyLocalIP()
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
 	txtAdConf := socket.SocketConfig{
-		ServerIP:   "192.168.86.24",
+		ServerIP:   "192.168.10.101",
 		ServerPort: "3000",
-		ClientIP:   "192.168.86.21",
-		ClientPort: 1000,
+		ClientIP:   clientIP,
+		ClientPort: 1100,
 	}
 	txtAdConn, err := socket.Connect(txtAdConf)
 	if err != nil {
-		fmt.Println(err)
 		panic(err)
 	}
+	defer func() {
+		err = txtAdConn.Close()
+		if err != nil {
+			panic(err)
+		}
+	}()
 	binAdConf := socket.SocketConfig{
-		ServerIP:   "192.168.86.24",
+		ServerIP:   "192.168.10.101",
 		ServerPort: "2200",
-		ClientIP:   "192.168.86.21",
-		ClientPort: 1000,
+		ClientIP:   clientIP,
+		ClientPort: 1200,
 	}
 	binAdConn, err := socket.Connect(binAdConf)
 	if err != nil {
-		fmt.Println(err)
 		panic(err)
 	}
+	defer func() {
+		err = binAdConn.Close()
+		if err != nil {
+			panic(err)
+		}
+	}()
 
 	ctx := context.Background()
 	parser := parser.NewParser()
@@ -45,20 +61,21 @@ func main() {
 		fmt.Println(err)
 		panic(err)
 	}
-
-	for i := 0; i < 50; i++ {
-		signals, err := binAdapter.ReceiveADValues(ctx)
+	defer func() {
+		err = txtAdapter.EndRec(ctx)
 		if err != nil {
 			fmt.Println(err)
 			panic(err)
 		}
-		fmt.Println(signals)
-	}
+	}()
 
-	err = txtAdapter.EndRec(ctx)
-	if err != nil {
-		fmt.Println(err)
-		panic(err)
+	// 10 x 50 ポイントのAD値を受信する
+	for i := 0; i < 10; i++ {
+		s, err := binAdapter.ReceiveADValues(ctx)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(s)
 	}
 
 }

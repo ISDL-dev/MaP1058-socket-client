@@ -9,37 +9,56 @@ import (
 	"github.com/Be3751/MaP1058-socket-client/internal/model"
 )
 
-func (p *parser) ToSignals(b []byte, s *model.Signals) error {
+func (p *parser) ToSignals(b []byte) (*model.Signals, error) {
+	s := model.NewSignals()
 	if len(b) != int(model.NumTotalBytes) {
-		return fmt.Errorf("the arg b's len must be %d", model.NumTotalBytes)
+		return nil, fmt.Errorf("the arg b's len must be %d", model.NumTotalBytes)
 	}
-
-	signalBuf := bytes.NewBuffer(b[:model.NumTotalBytes-model.SumCheckCodeSize])
-	var sum uint16
-	for pnt := 0; pnt < int(model.NumPoints); pnt++ {
-		for ch := 0; ch < model.NumAvailableChs; ch++ {
-			var adValue uint16
-			err := binary.Read(signalBuf, binary.BigEndian, &adValue)
-			if err != nil {
-				return fmt.Errorf("failed to read binary: %w", err)
-			}
-			s.Channels[ch].ADValues[pnt] = adValue
-			if pnt < model.NumPntsSumCheck {
-				sum += adValue
-			}
-		}
-		signalBuf.Next(int(model.NumChannels-model.NumAvailableChs) * model.NumADBytes) // 後半8個のチャンネルは未使用
-	}
-
-	var valueSumCheckCode uint32
-	sumCheckBuf := bytes.NewBuffer(b[model.NumTotalBytes-model.SumCheckCodeSize:])
-	err := binary.Read(sumCheckBuf, binary.BigEndian, &valueSumCheckCode)
+	err := sumCheck(b)
 	if err != nil {
-		return fmt.Errorf("failed to read binary: %w", err)
+		return nil, err
 	}
 
-	if int(valueSumCheckCode) != int(sum) {
-		return &FailureSumCheckError{Expected: uint16(valueSumCheckCode), Actual: sum}
+	buf := bytes.NewBuffer(b[:model.NumTotalBytes-4])
+	for pnt := 0; pnt < model.NumPoints; pnt++ {
+		for ch := 0; ch < model.NumAvailableChs; ch++ {
+			var ad uint16
+			err := binary.Read(
+				buf,
+				binary.LittleEndian,
+				&ad,
+			)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read binary: %w", err)
+			}
+			s.Channels[ch].ADValues[pnt] = ad
+		}
+		_ = buf.Next(int(model.NumChannels-model.NumAvailableChs) * model.NumADBytes) // don't use the 8 channels that are not available
+	}
+	return s, nil
+}
+
+func sumCheck(b []byte) error {
+	var actual uint16
+	buf := bytes.NewBuffer(b[:1600])
+	for i := 0; i < 160; i++ {
+		var ad uint16
+		err := binary.Read(buf, binary.LittleEndian, &ad)
+		if err != nil {
+			return fmt.Errorf("err: %w", err)
+		}
+		actual += ad
+	}
+	var expected uint16
+	err := binary.Read(bytes.NewBuffer(b[1600:1602]), binary.LittleEndian, &expected)
+	if err != nil {
+		return fmt.Errorf("err: %w", err)
+	}
+	if actual != expected {
+		return &FailureSumCheckError{Expected: expected, Actual: actual}
+	}
+	if actual == expected {
+		fmt.Println("success!!!")
 	}
 	return nil
 }
