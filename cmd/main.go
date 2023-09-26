@@ -69,6 +69,10 @@ func main() {
 		}
 	}()
 
+	// TODO: RANGE値を取得
+	// TODO: ANALYSIS値を取得
+	// TODO: CAL値を取得
+
 	// 10 x 50 ポイントのAD値を受信する
 	for i := 0; i < 10; i++ {
 		s, err := binAdapter.ReceiveADValues(ctx)
@@ -76,6 +80,9 @@ func main() {
 			panic(err)
 		}
 		fmt.Println(s)
+		// TODO: CAL値を取得するまで待機
+		// TODO: 取得したCAL値から計測値を算出
+		// TODO: 計測値をファイルに書き込む
 	}
 
 }

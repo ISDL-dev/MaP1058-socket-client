@@ -71,7 +71,7 @@ func (a *txtAdapter) EndRec(ctx context.Context) error {
 	}
 	rCmdStr := string(buf[:readLen])
 	if string(rCmdStr) != sCmdStr {
-		return fmt.Errorf("failed to end recording")
+		return fmt.Errorf("the received cmd `%s` dosen't match with the sent one `%s`", rCmdStr, sCmdStr)
 	}
 	return nil
 }
