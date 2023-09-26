@@ -7,11 +7,13 @@ import (
 
 const (
 	// 1回の受信に含まれるバイト数
-	NumTotalBytes = (NumChannels * NumPoints * NumADBytes) + SumCheckCodeSize
+	NumTotalBytes = 1604
 	// AD値と解釈するために必要なバイト数
 	NumADBytes = 2
 	// サムチェックコードを示すバイト列の長さ
 	SumCheckCodeSize = 4
+	// サムチェックコードを示すバイト列のうち下位2ビットのみ有効
+	SumCheckCodeAvailableSize = 2
 	// チャンネル数
 	NumChannels = 16
 	// 実際に利用可能なチャンネル数（16種類のうち1~8のみが利用可能）

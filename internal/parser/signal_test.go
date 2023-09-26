@@ -17,26 +17,28 @@ func TestToSignals(t *testing.T) {
 		parser := NewParser()
 		rawBytes := make([]byte, 1604)
 		for i := 0; i < sumBytes-sumCheckCodeSize; i += 32 {
-			for j := 0; j < 16; j++ {
-				if (i+j)%2 == 0 {
-					rawBytes[i+j] = 0x00
-				} else {
-					rawBytes[i+j] = 0x01
-				}
+			for j := 0; j < 16; j += 2 {
+				rawBytes[i+j] = 0x01
+				rawBytes[i+j+1] = 0x00
 			}
 		}
+		rawBytes[sumBytes-4] = 0x50
+		rawBytes[sumBytes-3] = 0x00
 		rawBytes[sumBytes-2] = 0x00
-		rawBytes[sumBytes-1] = 0x50
-		signals := model.NewSignals()
-		err := parser.ToSignals(rawBytes, signals)
+		rawBytes[sumBytes-1] = 0x00
+		s, err := parser.ToSignals(rawBytes)
 		assert.NoError(t, err)
+		for c := 0; c < model.NumAvailableChs; c++ {
+			for p := 0; p < model.NumPoints; p++ {
+				assert.Equal(t, uint16(1), s.Channels[c].ADValues[p])
+			}
+		}
 	})
 
 	t.Run("規定の長さでないバイト列を受け取ってエラー", func(t *testing.T) {
 		parser := NewParser()
 		rawBytes := []byte{0x00, 0x01, 0x02}
-		signals := model.NewSignals()
-		err := parser.ToSignals(rawBytes, signals)
+		_, err := parser.ToSignals(rawBytes)
 		assert.Error(t, err)
 	})
 
@@ -44,14 +46,16 @@ func TestToSignals(t *testing.T) {
 		parser := NewParser()
 		rawBytes := make([]byte, 1604)
 		for i := 0; i < sumBytes-sumCheckCodeSize; i += 32 {
-			for j := 0; j < 16; j++ {
+			for j := 0; j < 32; j += 2 {
 				rawBytes[i+j] = 0x01
+				rawBytes[i+j+1] = 0x00
 			}
 		}
+		rawBytes[sumBytes-4] = 0x50
+		rawBytes[sumBytes-3] = 0x00
 		rawBytes[sumBytes-2] = 0x00
-		rawBytes[sumBytes-1] = 0x50
-		signals := model.NewSignals()
-		err := parser.ToSignals(rawBytes, signals)
-		assert.EqualValues(t, &FailureSumCheckError{Expected: 80, Actual: 257 * 80}, err)
+		rawBytes[sumBytes-1] = 0x00
+		_, err := parser.ToSignals(rawBytes)
+		assert.EqualValues(t, &FailureSumCheckError{Expected: 80, Actual: 160}, err)
 	})
 }
