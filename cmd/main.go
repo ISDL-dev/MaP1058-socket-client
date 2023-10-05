@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/Be3751/MaP1058-socket-client/internal/adapter"
 	"github.com/Be3751/MaP1058-socket-client/internal/parser"
+	"github.com/Be3751/MaP1058-socket-client/internal/scanner"
 	"github.com/Be3751/MaP1058-socket-client/internal/socket"
 	"github.com/Be3751/MaP1058-socket-client/utils/net"
 )
@@ -34,6 +36,7 @@ func main() {
 			panic(err)
 		}
 	}()
+
 	binAdConf := socket.SocketConfig{
 		ServerIP:   "192.168.10.101",
 		ServerPort: "2200",
@@ -53,36 +56,47 @@ func main() {
 
 	ctx := context.Background()
 	parser := parser.NewParser()
-	txtAdapter := adapter.NewTxtAdapter(txtAdConn, parser)
+	scanner := scanner.NewCustomScanner(txtAdConn)
+	txtAdapter := adapter.NewTxtAdapter(txtAdConn, scanner, parser)
 	binAdapter := adapter.NewBinAdapter(binAdConn, parser)
 
 	err = txtAdapter.StartRec(ctx, time.Second*60, time.Now())
 	if err != nil {
-		fmt.Println(err)
 		panic(err)
 	}
 	defer func() {
 		err = txtAdapter.EndRec(ctx)
 		if err != nil {
-			fmt.Println(err)
 			panic(err)
 		}
 	}()
 
-	// TODO: RANGE値を取得
-	// TODO: ANALYSIS値を取得
-	// TODO: CAL値を取得
+	setting, err := txtAdapter.GetSetting()
+	if err != nil {
+		panic(err)
+	}
 
-	// 10 x 50 ポイントのAD値を受信する
+	file, err := os.Create("temp.txt")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	// ENDコマンドを受信するまで受信とファイル書き込みを繰り返す
 	for i := 0; i < 10; i++ {
 		s, err := binAdapter.ReceiveADValues(ctx)
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(s)
-		// TODO: CAL値を取得するまで待機
-		// TODO: 取得したCAL値から計測値を算出
+		err = s.SetMeasurements(setting.Calibration)
+		if err != nil {
+			panic(err)
+		}
 		// TODO: 計測値をファイルに書き込む
+		_, err = file.WriteString()
+		if err != nil {
+			panic(err)
+		}
 	}
 
 }
