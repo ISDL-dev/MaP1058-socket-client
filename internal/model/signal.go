@@ -41,14 +41,14 @@ type channelSignal struct {
 	Measurements [NumPoints]float64
 }
 
-func (s *Signals) SetMeasurements(cal Cal) error {
+func (s *Signals) SetMeasurements(cal Calibration) error {
 	for i, ch := range s.Channels {
 		for j, adV := range ch.ADValues {
 			chCal := cal[i]
 			if chCal.CalAD == 0 {
 				return fmt.Errorf("value of CAL_AD must not be 0. CAL_AD at %dch is 0", i+1)
 			}
-			s.Channels[i].Measurements[j] = (float64(adV)-chCal.BaseAD)*(chCal.EuHi-chCal.EuLo)/chCal.CalAD + chCal.EuLo
+			s.Channels[i].Measurements[j] = float64((adV-chCal.BaseAD))*(chCal.EuHi-chCal.EuLo)/float64(chCal.CalAD) + chCal.EuLo
 		}
 	}
 	return nil

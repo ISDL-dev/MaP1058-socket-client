@@ -34,6 +34,36 @@ func (m *MockParser) EXPECT() *MockParserMockRecorder {
 	return m.recorder
 }
 
+// ToAnalysis mocks base method.
+func (m *MockParser) ToAnalysis(c *model.Command) (model.Analysis, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ToAnalysis", c)
+	ret0, _ := ret[0].(model.Analysis)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ToAnalysis indicates an expected call of ToAnalysis.
+func (mr *MockParserMockRecorder) ToAnalysis(c interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ToAnalysis", reflect.TypeOf((*MockParser)(nil).ToAnalysis), c)
+}
+
+// ToChannelCal mocks base method.
+func (m *MockParser) ToChannelCal(c *model.Command) (model.ChannelCal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ToChannelCal", c)
+	ret0, _ := ret[0].(model.ChannelCal)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ToChannelCal indicates an expected call of ToChannelCal.
+func (mr *MockParserMockRecorder) ToChannelCal(c interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ToChannelCal", reflect.TypeOf((*MockParser)(nil).ToChannelCal), c)
+}
+
 // ToCommand mocks base method.
 func (m *MockParser) ToCommand(s string) (*model.Command, error) {
 	m.ctrl.T.Helper()
@@ -62,4 +92,19 @@ func (m *MockParser) ToSignals(b []byte) (*model.Signals, error) {
 func (mr *MockParserMockRecorder) ToSignals(b interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ToSignals", reflect.TypeOf((*MockParser)(nil).ToSignals), b)
+}
+
+// ToTrendRange mocks base method.
+func (m *MockParser) ToTrendRange(c *model.Command) (model.TrendRange, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ToTrendRange", c)
+	ret0, _ := ret[0].(model.TrendRange)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ToTrendRange indicates an expected call of ToTrendRange.
+func (mr *MockParserMockRecorder) ToTrendRange(c interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ToTrendRange", reflect.TypeOf((*MockParser)(nil).ToTrendRange), c)
 }
