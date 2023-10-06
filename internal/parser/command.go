@@ -14,6 +14,21 @@ func (p *parser) ToCommand(s string) (*model.Command, error) {
 		return nil, fmt.Errorf("%s, s string must contain <SCMD> and </SCMD> on both sides: %s", baseErrMsg, s)
 	} else if !strings.Contains(s, ":A:") {
 		return nil, fmt.Errorf("%s, s string must contain \":A:\": %s", baseErrMsg, s)
+	} else if strings.Contains(s, "GETSETTING") { // GETSETTINGは例外的なフォーマット
+		// TODO: よりシンプルなパースを考える
+		s = strings.TrimPrefix(s, "<SCMD>")
+		s = strings.TrimSuffix(s, "</SCMD>")
+		nameAndParams := strings.Split(s, ":A:")
+		name := nameAndParams[0]
+		paramsStr := nameAndParams[1]
+		fmt.Println(paramsStr)
+		var params [model.NumSeparator + 1]string
+		var calStr string
+		re := regexp.MustCompile(`"(.*)"`)
+		calStr = re.FindString(paramsStr)
+		calStr = strings.TrimPrefix(calStr, "\"")
+		copy(params[:], strings.Split(calStr, ",")[:5])
+		return &model.Command{Name: name, Params: params}, nil
 	} else if strings.Count(s, ",") != model.NumSeparator {
 		return nil, fmt.Errorf("%s, s string must contain %d commas: %s", baseErrMsg, model.NumSeparator, s)
 	}
@@ -76,7 +91,7 @@ func (p *parser) ToAnalysis(c *model.Command) (model.Analysis, error) {
 		if _, err := fmt.Sscanf(p, "%d", &ca); err != nil {
 			return a, fmt.Errorf("failed to scan %dth parameter as ChannelAnalysis: %s", i, err)
 		}
-		a[i] = ca
+		a = append(a, ca)
 	}
 	return a, nil
 }
@@ -89,13 +104,18 @@ func (p *parser) ToChannelCal(c *model.Command) (model.ChannelCal, error) {
 		return cal, fmt.Errorf(`the received command has %d with-value parameters, 
 			but it should have 5 with-value parameters: %s`, c.NumValueParams(), c.String())
 	}
-	for i, p := range c.Params {
-		if p == "" {
-			break
-		}
-		if _, err := fmt.Sscanf(p, "%f,%f,%f,%f", &cal.BaseAD, &cal.CalAD, &cal.EuHi, &cal.EuLo); err != nil {
-			return cal, fmt.Errorf("failed to scan %dth parameter as ChannelCal: %s", i, err)
-		}
+	// TODO: よりシンプルなパースを考える
+	if _, err := fmt.Sscanf(c.Params[1], "BASE_AD=%d", &cal.BaseAD); err != nil {
+		return cal, fmt.Errorf("failed to scan 1st parameter as ChannelCal's BASE_AD: %s", err)
+	}
+	if _, err := fmt.Sscanf(c.Params[2], "CAL_AD=%d", &cal.CalAD); err != nil {
+		return cal, fmt.Errorf("failed to scan 2nd parameter as ChannelCal's CAL_AD: %s", err)
+	}
+	if _, err := fmt.Sscanf(c.Params[3], "EU_HI=%f", &cal.EuHi); err != nil {
+		return cal, fmt.Errorf("failed to scan 3rd parameter as ChannelCal's EU_HI: %s", err)
+	}
+	if _, err := fmt.Sscanf(c.Params[4], "EU_LO=%f", &cal.EuLo); err != nil {
+		return cal, fmt.Errorf("failed to scan 4th parameter as ChannelCal's EU_LO: %s", err)
 	}
 	return cal, nil
 }

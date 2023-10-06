@@ -13,6 +13,10 @@ type CustomScanner interface {
 	Err() error
 }
 
+type customScanner struct {
+	origin *bufio.Scanner
+}
+
 func NewCustomScanner(c *net.TCPConn) CustomScanner {
 	s := bufio.NewScanner(c)
 	onSCMD := func(data []byte, atEOF bool) (advance int, token []byte, err error) {
@@ -28,5 +32,17 @@ func NewCustomScanner(c *net.TCPConn) CustomScanner {
 		return
 	}
 	s.Split(onSCMD)
-	return s
+	return &customScanner{origin: s}
+}
+
+func (s *customScanner) Scan() bool {
+	return s.origin.Scan()
+}
+
+func (s *customScanner) Text() string {
+	return s.origin.Text() + "</SCMD>"
+}
+
+func (s *customScanner) Err() error {
+	return s.origin.Err()
 }

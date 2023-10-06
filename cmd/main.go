@@ -20,8 +20,10 @@ func main() {
 		fmt.Println(err)
 		panic(err)
 	}
+	// TODO: サーバー側のIPアドレスを動的に取得する処理も必要
+	serverIP := "192.168.10.105"
 	txtAdConf := socket.SocketConfig{
-		ServerIP:   "192.168.10.101",
+		ServerIP:   serverIP,
 		ServerPort: "3000",
 		ClientIP:   clientIP,
 		ClientPort: 1100,
@@ -38,7 +40,7 @@ func main() {
 	}()
 
 	binAdConf := socket.SocketConfig{
-		ServerIP:   "192.168.10.101",
+		ServerIP:   serverIP,
 		ServerPort: "2200",
 		ClientIP:   clientIP,
 		ClientPort: 1200,
@@ -69,20 +71,17 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		os.Exit(0)
 	}()
 
 	setting, err := txtAdapter.GetSetting()
 	if err != nil {
 		panic(err)
 	}
+	// TODO: 設定値をファイルに書き込む
 
-	file, err := os.Create("temp.txt")
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-
-	// ENDコマンドを受信するまで受信とファイル書き込みを繰り返す
+	// TODO: 生波形の受信と解析データの受信を並行して行う
+	// TODO: ENDコマンドを受信するまで、生波形の受信とファイル書き込みを繰り返す
 	for i := 0; i < 10; i++ {
 		s, err := binAdapter.ReceiveADValues(ctx)
 		if err != nil {
@@ -92,6 +91,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		fmt.Println(s)
 		// TODO: 計測値をファイルに書き込む
 		_, err = file.WriteString()
 		if err != nil {
@@ -99,4 +99,6 @@ func main() {
 		}
 	}
 
+	// TODO: ENDコマンドを受信するまで、解析データの受信とファイル書き込みを繰り返す
+	// TODO: 計測値をファイルに書き込む
 }

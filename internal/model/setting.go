@@ -15,7 +15,7 @@ type ChannelRange struct {
 	Lower uint
 }
 
-//　全てのチャネルにおける解析種別
+// 　全てのチャネルにおける解析種別
 type Analysis []ChannelAnalysis
 
 // 解析種別
