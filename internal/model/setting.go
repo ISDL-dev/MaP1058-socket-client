@@ -16,7 +16,7 @@ type ChannelRange struct {
 }
 
 // 　全てのチャネルにおける解析種別
-type Analysis []ChannelAnalysis
+type Analysis [NumAvailableChs]ChannelAnalysis
 
 // 解析種別
 type ChannelAnalysis uint
@@ -38,7 +38,7 @@ const (
 )
 
 // 全てのチャネルにおける校正値
-type Calibration []ChannelCal
+type Calibration [NumAvailableChs]ChannelCal
 
 // AD値から測定値に変換するための校正値
 type ChannelCal struct {

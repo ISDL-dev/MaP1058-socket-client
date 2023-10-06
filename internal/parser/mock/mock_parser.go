@@ -35,7 +35,7 @@ func (m *MockParser) EXPECT() *MockParserMockRecorder {
 }
 
 // ToAnalysis mocks base method.
-func (m *MockParser) ToAnalysis(c *model.Command) (model.Analysis, error) {
+func (m *MockParser) ToAnalysis(c model.Command) (model.Analysis, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ToAnalysis", c)
 	ret0, _ := ret[0].(model.Analysis)
@@ -50,7 +50,7 @@ func (mr *MockParserMockRecorder) ToAnalysis(c interface{}) *gomock.Call {
 }
 
 // ToChannelCal mocks base method.
-func (m *MockParser) ToChannelCal(c *model.Command) (model.ChannelCal, error) {
+func (m *MockParser) ToChannelCal(c model.Command) (model.ChannelCal, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ToChannelCal", c)
 	ret0, _ := ret[0].(model.ChannelCal)
@@ -65,10 +65,10 @@ func (mr *MockParserMockRecorder) ToChannelCal(c interface{}) *gomock.Call {
 }
 
 // ToCommand mocks base method.
-func (m *MockParser) ToCommand(s string) (*model.Command, error) {
+func (m *MockParser) ToCommand(s string) (model.Command, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ToCommand", s)
-	ret0, _ := ret[0].(*model.Command)
+	ret0, _ := ret[0].(model.Command)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -95,7 +95,7 @@ func (mr *MockParserMockRecorder) ToSignals(b interface{}) *gomock.Call {
 }
 
 // ToTrendRange mocks base method.
-func (m *MockParser) ToTrendRange(c *model.Command) (model.TrendRange, error) {
+func (m *MockParser) ToTrendRange(c model.Command) (model.TrendRange, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ToTrendRange", c)
 	ret0, _ := ret[0].(model.TrendRange)

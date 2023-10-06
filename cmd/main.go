@@ -92,11 +92,11 @@ func main() {
 			panic(err)
 		}
 		fmt.Println(s)
-		// TODO: 計測値をファイルに書き込む
-		_, err = file.WriteString()
-		if err != nil {
-			panic(err)
-		}
+		// // TODO: 計測値をファイルに書き込む
+		// _, err = file.WriteString()
+		// if err != nil {
+		// 	panic(err)
+		// }
 	}
 
 	// TODO: ENDコマンドを受信するまで、解析データの受信とファイル書き込みを繰り返す

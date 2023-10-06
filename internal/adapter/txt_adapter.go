@@ -133,12 +133,19 @@ func (a *txtAdapter) GetSetting() (*model.Setting, error) {
 			s.Analysis = as
 			analysisCnt++
 		case "GETSETTING":
+			// 後半8チャネルは収録されていない空のデータが送られてくるため無視する
+			if calCnt >= model.NumChannels-model.NumAvailableChs {
+				calCnt++
+				continue
+			}
 			chc, err := a.Parser.ToChannelCal(cmd)
 			if err != nil {
 				return nil, fmt.Errorf("failed to convert %s to Calibration: %w", cmdStr, err)
 			}
-			s.Calibration = append(s.Calibration, chc)
+			s.Calibration[calCnt] = chc
 			calCnt++
+		default:
+			return nil, fmt.Errorf("invalid command: %s", cmdStr)
 		}
 		if rangeCnt == 1 && analysisCnt == 1 && calCnt == model.NumChannels {
 			break
