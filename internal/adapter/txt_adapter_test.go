@@ -80,7 +80,7 @@ func TestGetStatus(t *testing.T) {
 		rCmd := []byte("<SCMD>STATUS:A:Acq,,,,,,,,,</SCMD>")
 		conn.EXPECT().Read(gomock.Any()).SetArg(0, rCmd).Return(len(rCmd), nil)
 		ctx := context.Background()
-		parser.EXPECT().ToCommand(string(rCmd)).Return(&model.Command{Name: "STATUS", Params: [10]string{"Acq"}}, nil)
+		parser.EXPECT().ToCommand(string(rCmd)).Return(model.Command{Name: "STATUS", Params: [10]string{"Acq"}}, nil)
 
 		txtAdapter := NewTxtAdapter(conn, scanner, parser)
 		status, err := txtAdapter.GetStatus(ctx)
@@ -169,10 +169,9 @@ func TestGetSetting(t *testing.T) {
 			order = append(order, scanner.EXPECT().Scan().Return(true))
 			order = append(order, scanner.EXPECT().Text().Return(stgCmdStr))
 			order = append(order, parser.EXPECT().ToCommand(stgCmdStr).Return(stgCmd, nil))
-			if i >= 8 {
-				continue
+			if i < 8 {
+				order = append(order, parser.EXPECT().ToChannelCal(stgCmd).Return(c, nil))
 			}
-			order = append(order, parser.EXPECT().ToChannelCal(stgCmd).Return(c, nil))
 		}
 		order = append(order, scanner.EXPECT().Err().Return(nil))
 		gomock.InOrder(order...)
@@ -201,7 +200,7 @@ func TestGetSetting(t *testing.T) {
 				{BaseAD: 5, CalAD: 102, EuHi: 0.13, EuLo: 5},
 				{BaseAD: 6, CalAD: 202, EuHi: 0.05, EuLo: 6},
 				{BaseAD: 7, CalAD: 302, EuHi: 0.03, EuLo: 7}},
-		}, setting)
+		}, *setting)
 	})
 
 	t.Run("スキャンが可能なトークンを受信できずエラー", func(t *testing.T) {
