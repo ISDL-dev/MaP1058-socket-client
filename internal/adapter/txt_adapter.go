@@ -150,7 +150,7 @@ func (a *txtAdapter) GetSetting() (*model.Setting, error) {
 		}
 	}
 	if err := a.Scanner.Err(); err != nil {
-		return nil, fmt.Errorf("Invalid input: %w", err)
+		return nil, fmt.Errorf("invalid input: %w", err)
 	}
 	return &s, nil
 }
