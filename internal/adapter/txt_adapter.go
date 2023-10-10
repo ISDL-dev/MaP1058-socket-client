@@ -9,6 +9,7 @@ import (
 
 	"github.com/Be3751/MaP1058-socket-client/internal/model"
 	"github.com/Be3751/MaP1058-socket-client/internal/parser"
+	"github.com/Be3751/MaP1058-socket-client/internal/scanner"
 	"github.com/Be3751/MaP1058-socket-client/internal/socket"
 )
 
@@ -17,18 +18,21 @@ type TxtAdapter interface {
 	StartRec(ctx context.Context, recTime time.Duration, recDateTime time.Time) error
 	EndRec(ctx context.Context) error
 	GetStatus(ctx context.Context) (model.Status, error)
+	GetSetting() (*model.Setting, error)
 }
 
-func NewTxtAdapter(c socket.Conn, p parser.Parser) TxtAdapter {
+func NewTxtAdapter(c socket.Conn, s scanner.CustomScanner, p parser.Parser) TxtAdapter {
 	return &txtAdapter{
-		Conn:   c,
-		Parser: p,
+		Conn:    c,
+		Scanner: s,
+		Parser:  p,
 	}
 }
 
 type txtAdapter struct {
-	Conn   socket.Conn
-	Parser parser.Parser
+	Conn    socket.Conn
+	Scanner scanner.CustomScanner
+	Parser  parser.Parser
 }
 
 func (a *txtAdapter) StartRec(ctx context.Context, recSecond time.Duration, recDateTime time.Time) error {
@@ -71,7 +75,7 @@ func (a *txtAdapter) EndRec(ctx context.Context) error {
 	}
 	rCmdStr := string(buf[:readLen])
 	if string(rCmdStr) != sCmdStr {
-		return fmt.Errorf("failed to end recording")
+		return fmt.Errorf("the received cmd `%s` dosen't match with the sent one `%s`", rCmdStr, sCmdStr)
 	}
 	return nil
 }
@@ -98,6 +102,57 @@ func (a *txtAdapter) GetStatus(ctx context.Context) (model.Status, error) {
 	}
 	status := rCmd.Params[0]
 	return model.Status(status), nil
+}
+
+func (a *txtAdapter) GetSetting() (*model.Setting, error) {
+	var s model.Setting
+	var (
+		rangeCnt    int
+		analysisCnt int
+		calCnt      int
+	)
+	for a.Scanner.Scan() {
+		cmdStr := a.Scanner.Text()
+		cmd, err := a.Parser.ToCommand(cmdStr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert %s to Command: %w", cmdStr, err)
+		}
+		switch cmd.Name {
+		case "RANGE":
+			tr, err := a.Parser.ToTrendRange(cmd)
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert %s to TrendRange: %w", cmdStr, err)
+			}
+			s.TrendRange = tr
+			rangeCnt++
+		case "ANALYSIS":
+			as, err := a.Parser.ToAnalysis(cmd)
+			if err != nil {
+				return nil, fmt.Errorf("failed to convert %s to Analysis: %w", cmdStr, err)
+			}
+			s.Analysis = as
+			analysisCnt++
+		case "GETSETTING":
+			// 値を含む受信コマンドは前半8チャネルのみ
+			if calCnt < model.NumChannels-model.NumAvailableChs {
+				chc, err := a.Parser.ToChannelCal(cmd)
+				if err != nil {
+					return nil, fmt.Errorf("failed to convert %s to Calibration: %w", cmdStr, err)
+				}
+				s.Calibration[calCnt] = chc
+			}
+			calCnt++
+		default:
+			return nil, fmt.Errorf("invalid command: %s", cmdStr)
+		}
+		if rangeCnt == 1 && analysisCnt == 1 && calCnt == model.NumChannels {
+			break
+		}
+	}
+	if err := a.Scanner.Err(); err != nil {
+		return nil, fmt.Errorf("invalid input: %w", err)
+	}
+	return &s, nil
 }
 
 func strSecond(d time.Duration) string {

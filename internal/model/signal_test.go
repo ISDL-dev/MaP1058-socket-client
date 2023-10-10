@@ -14,7 +14,7 @@ func TestSetMeasurements(t *testing.T) {
 				signals.Channels[ch].ADValues[pnt] = 1
 			}
 		}
-		cal := Cal{
+		cal := Calibration{
 			{1, 1, 0, 2},
 			{1, 1, 0, 0},
 			{1, 1, 0, 0},
@@ -39,7 +39,7 @@ func TestSetMeasurements(t *testing.T) {
 
 	t.Run("CAL_ADの値が0のCalを受け取ってエラー", func(t *testing.T) {
 		signals := NewSignals()
-		cal := Cal{
+		cal := Calibration{
 			{1, 0, 0, 2},
 			{1, 0, 0, 0},
 			{1, 0, 0, 0},
