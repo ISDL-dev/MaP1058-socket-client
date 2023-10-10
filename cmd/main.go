@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/Be3751/MaP1058-socket-client/internal/adapter"
 	"github.com/Be3751/MaP1058-socket-client/internal/parser"
+	"github.com/Be3751/MaP1058-socket-client/internal/scanner"
 	"github.com/Be3751/MaP1058-socket-client/internal/socket"
 	"github.com/Be3751/MaP1058-socket-client/utils/net"
 )
@@ -18,8 +20,10 @@ func main() {
 		fmt.Println(err)
 		panic(err)
 	}
+	// TODO: サーバー側のIPアドレスを動的に取得する処理も必要
+	serverIP := "192.168.10.105"
 	txtAdConf := socket.SocketConfig{
-		ServerIP:   "192.168.10.101",
+		ServerIP:   serverIP,
 		ServerPort: "3000",
 		ClientIP:   clientIP,
 		ClientPort: 1100,
@@ -34,8 +38,9 @@ func main() {
 			panic(err)
 		}
 	}()
+
 	binAdConf := socket.SocketConfig{
-		ServerIP:   "192.168.10.101",
+		ServerIP:   serverIP,
 		ServerPort: "2200",
 		ClientIP:   clientIP,
 		ClientPort: 1200,
@@ -53,36 +58,47 @@ func main() {
 
 	ctx := context.Background()
 	parser := parser.NewParser()
-	txtAdapter := adapter.NewTxtAdapter(txtAdConn, parser)
+	scanner := scanner.NewCustomScanner(txtAdConn)
+	txtAdapter := adapter.NewTxtAdapter(txtAdConn, scanner, parser)
 	binAdapter := adapter.NewBinAdapter(binAdConn, parser)
 
 	err = txtAdapter.StartRec(ctx, time.Second*60, time.Now())
 	if err != nil {
-		fmt.Println(err)
 		panic(err)
 	}
 	defer func() {
 		err = txtAdapter.EndRec(ctx)
 		if err != nil {
-			fmt.Println(err)
 			panic(err)
 		}
+		os.Exit(0)
 	}()
 
-	// TODO: RANGE値を取得
-	// TODO: ANALYSIS値を取得
-	// TODO: CAL値を取得
+	setting, err := txtAdapter.GetSetting()
+	if err != nil {
+		panic(err)
+	}
+	// TODO: 設定値をファイルに書き込む
 
-	// 10 x 50 ポイントのAD値を受信する
+	// TODO: 生波形の受信と解析データの受信を並行して行う
+	// TODO: ENDコマンドを受信するまで、生波形の受信とファイル書き込みを繰り返す
 	for i := 0; i < 10; i++ {
 		s, err := binAdapter.ReceiveADValues(ctx)
 		if err != nil {
 			panic(err)
 		}
+		err = s.SetMeasurements(setting.Calibration)
+		if err != nil {
+			panic(err)
+		}
 		fmt.Println(s)
-		// TODO: CAL値を取得するまで待機
-		// TODO: 取得したCAL値から計測値を算出
-		// TODO: 計測値をファイルに書き込む
+		// // TODO: 計測値をファイルに書き込む
+		// _, err = file.WriteString()
+		// if err != nil {
+		// 	panic(err)
+		// }
 	}
 
+	// TODO: ENDコマンドを受信するまで、解析データの受信とファイル書き込みを繰り返す
+	// TODO: 計測値をファイルに書き込む
 }
