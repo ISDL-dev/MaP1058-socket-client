@@ -57,9 +57,6 @@ func sumCheck(b []byte) error {
 	if actual != expected {
 		return &FailureSumCheckError{Expected: expected, Actual: actual}
 	}
-	if actual == expected {
-		fmt.Println("success!!!")
-	}
 	return nil
 }
 
