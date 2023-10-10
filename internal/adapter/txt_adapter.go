@@ -106,12 +106,12 @@ func (a *txtAdapter) GetStatus(ctx context.Context) (model.Status, error) {
 
 func (a *txtAdapter) GetSetting() (*model.Setting, error) {
 	var s model.Setting
+	var (
+		rangeCnt    int
+		analysisCnt int
+		calCnt      int
+	)
 	for a.Scanner.Scan() {
-		var (
-			rangeCnt    int
-			analysisCnt int
-			calCnt      int
-		)
 		cmdStr := a.Scanner.Text()
 		cmd, err := a.Parser.ToCommand(cmdStr)
 		if err != nil {
@@ -133,16 +133,14 @@ func (a *txtAdapter) GetSetting() (*model.Setting, error) {
 			s.Analysis = as
 			analysisCnt++
 		case "GETSETTING":
-			// 後半8チャネルは収録されていない空のデータが送られてくるため無視する
-			if calCnt >= model.NumChannels-model.NumAvailableChs {
-				calCnt++
-				continue
+			// 値を含む受信コマンドは前半8チャネルのみ
+			if calCnt < model.NumChannels-model.NumAvailableChs {
+				chc, err := a.Parser.ToChannelCal(cmd)
+				if err != nil {
+					return nil, fmt.Errorf("failed to convert %s to Calibration: %w", cmdStr, err)
+				}
+				s.Calibration[calCnt] = chc
 			}
-			chc, err := a.Parser.ToChannelCal(cmd)
-			if err != nil {
-				return nil, fmt.Errorf("failed to convert %s to Calibration: %w", cmdStr, err)
-			}
-			s.Calibration[calCnt] = chc
 			calCnt++
 		default:
 			return nil, fmt.Errorf("invalid command: %s", cmdStr)
