@@ -1,9 +1,9 @@
 package model
 
 type Setting struct {
-	TrendRange  TrendRange
-	Analysis    Analysis
-	Calibration Calibration
+	TrendRange   TrendRange
+	AnalysisType AnalysisType
+	Calibration  Calibration
 }
 
 // 全てのチャネルにおける表示範囲
@@ -15,26 +15,26 @@ type ChannelRange struct {
 	Lower uint
 }
 
-// 　全てのチャネルにおける解析種別
-type Analysis [NumAvailableChs]ChannelAnalysis
+// 全てのチャネルにおける解析種別
+type AnalysisType [NumAvailableChs]ChannelType
 
 // 解析種別
-type ChannelAnalysis uint
+type ChannelType uint
 
 const (
-	NoAnalysis ChannelAnalysis = iota
-	EMG
-	EOG_H
-	EOG_V
-	EEG
-	RRInt
-	CI
-	RRCV
-	HELF
-	WAVE
-	ExtPls
-	Resp
-	Resp2
+	NoAnalysis ChannelType = iota
+	EMGCh
+	EOGHCh
+	EOGVCh
+	EEGCh
+	RRIntCh
+	CICh
+	RRCVCh
+	HELFCh
+	WAVECh
+	ExtPlsCh
+	RespCh
+	Resp2Ch
 )
 
 // 全てのチャネルにおける校正値

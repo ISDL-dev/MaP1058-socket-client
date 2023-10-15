@@ -20,7 +20,7 @@ func TestAnalyzedEEG_ToCSVHeader(t *testing.T) {
 			a:    AnalyzedEEG{},
 			args: args{
 				at: AnalysisType{
-					EEG, EEG, EEG, EEG,
+					EEGCh, EEGCh, EEGCh, EEGCh,
 					NoAnalysis, NoAnalysis, NoAnalysis, NoAnalysis,
 				},
 			},
@@ -36,8 +36,8 @@ func TestAnalyzedEEG_ToCSVHeader(t *testing.T) {
 			a:    AnalyzedEEG{},
 			args: args{
 				at: AnalysisType{
-					NoAnalysis, NoAnalysis, NoAnalysis, EEG,
-					EEG, EEG, NoAnalysis, EEG,
+					NoAnalysis, NoAnalysis, NoAnalysis, EEGCh,
+					EEGCh, EEGCh, NoAnalysis, EEGCh,
 				},
 			},
 			want: []string{

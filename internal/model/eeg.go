@@ -56,7 +56,7 @@ func (a *AnalyzedEEG) ToCSVRow() []string {
 func (a *AnalyzedEEG) ToCSVHeader(at AnalysisType) []string {
 	header := []string{""}
 	for i, t := range at {
-		if t == EEG {
+		if t == EEGCh {
 			header = append(header, []string{
 				fmt.Sprintf("total_ch%d", i+1),
 				fmt.Sprintf("delta_ch%d", i+1),
