@@ -35,10 +35,10 @@ func (m *MockParser) EXPECT() *MockParserMockRecorder {
 }
 
 // ToAnalysis mocks base method.
-func (m *MockParser) ToAnalysis(c model.Command) (model.Analysis, error) {
+func (m *MockParser) ToAnalysis(c model.Command) (model.AnalysisType, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ToAnalysis", c)
-	ret0, _ := ret[0].(model.Analysis)
+	ret0, _ := ret[0].(model.AnalysisType)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -62,6 +62,21 @@ func (m *MockParser) ToChannelCal(c model.Command) (model.ChannelCal, error) {
 func (mr *MockParserMockRecorder) ToChannelCal(c interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ToChannelCal", reflect.TypeOf((*MockParser)(nil).ToChannelCal), c)
+}
+
+// ToChannelPower mocks base method.
+func (m *MockParser) ToChannelPower(c model.Command) (model.ChannelPower, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ToChannelPower", c)
+	ret0, _ := ret[0].(model.ChannelPower)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ToChannelPower indicates an expected call of ToChannelPower.
+func (mr *MockParserMockRecorder) ToChannelPower(c interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ToChannelPower", reflect.TypeOf((*MockParser)(nil).ToChannelPower), c)
 }
 
 // ToCommand mocks base method.
