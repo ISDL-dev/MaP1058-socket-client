@@ -6,21 +6,21 @@ import (
 )
 
 const (
-	// 1回の受信に含まれるバイト数
+	// NumTotalBytes 1回の受信に含まれるバイト数
 	NumTotalBytes = 1604
-	// AD値と解釈するために必要なバイト数
+	// NumADBytes AD値と解釈するために必要なバイト数
 	NumADBytes = 2
-	// サムチェックコードを示すバイト列の長さ
+	// SumCheckCodeSize サムチェックコードを示すバイト列の長さ
 	SumCheckCodeSize = 4
-	// サムチェックコードを示すバイト列のうち下位2ビットのみ有効
+	// SumCheckCodeAvailableSize サムチェックコードを示すバイト列のうち下位2ビットのみ有効
 	SumCheckCodeAvailableSize = 2
-	// チャンネル数
+	// NumChannels チャンネル数
 	NumChannels = 16
-	// 実際に利用可能なチャンネル数（16種類のうち1~8のみが利用可能）
+	// NumAvailableChs 実際に利用可能なチャンネル数（16種類のうち1~8のみが利用可能）
 	NumAvailableChs = 8
-	// 1回の受信で1つのチャンネルが取得できる信号の数
+	// NumPoints 1回の受信で1つのチャンネルが取得できる信号の数
 	NumPoints = 50
-	// 先頭の何ポイントまでの値をサムチェックに用いるか
+	// NumPntsSumCheck 先頭の何ポイントまでの値をサムチェックに用いるか
 	NumPntsSumCheck = 10
 )
 

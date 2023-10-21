@@ -75,8 +75,8 @@ func (p *parser) ToTrendRange(c model.Command) (model.TrendRange, error) {
 	return tr, nil
 }
 
-func (p *parser) ToAnalysis(c model.Command) (model.Analysis, error) {
-	var a model.Analysis
+func (p *parser) ToAnalysis(c model.Command) (model.AnalysisType, error) {
+	var a model.AnalysisType
 	if c.Name != "ANALYSIS" {
 		return a, fmt.Errorf("the received command is not ANALYSIS: %s", c.Name)
 	} else if c.NumValueParams() != 8 {
@@ -87,7 +87,7 @@ func (p *parser) ToAnalysis(c model.Command) (model.Analysis, error) {
 		if p == "" {
 			break
 		}
-		var ca model.ChannelAnalysis
+		var ca model.ChannelType
 		if _, err := fmt.Sscanf(p, "%d", &ca); err != nil {
 			return a, fmt.Errorf("failed to scan %dth parameter as ChannelAnalysis: %s", i, err)
 		}
@@ -118,6 +118,54 @@ func (p *parser) ToChannelCal(c model.Command) (model.ChannelCal, error) {
 		return cal, fmt.Errorf("failed to scan 4th parameter as ChannelCal's EU_LO: %s", err)
 	}
 	return cal, nil
+}
+
+func (p *parser) ToChannelPower(c model.Command) (model.ChannelPower, error) {
+	var power model.ChannelPower
+	if c.Name != "DATA_EEG" {
+		return power, fmt.Errorf(
+			"the received command is not DATA_EEG: %s",
+			c.Name,
+		)
+	} else if c.Params[0] != "4" {
+		return power, fmt.Errorf(
+			`the received command's 1st parameter is not "4" indicating EEG: %s`,
+			c.String(),
+		)
+	} else if c.NumValueParams() != 7 {
+		return power, fmt.Errorf(
+			`the received command has %d with-value parameters,
+			but it should have 7 with-value parameters: %s`,
+			c.NumValueParams(),
+			c.String(),
+		)
+	}
+
+	_, err := fmt.Sscanf(c.Params[1], "%d", &power.Time)
+	if err != nil {
+		return power, fmt.Errorf("failed to scan 2nd parameter as time: %s", err)
+	}
+	_, err = fmt.Sscanf(c.Params[2], "%d", &power.ChNum)
+	if err != nil {
+		return power, fmt.Errorf("failed to scan 3rd parameter as channel number: %s", err)
+	}
+	_, err = fmt.Sscanf(c.Params[3], "%d", &power.BandNum)
+	if err != nil {
+		return power, fmt.Errorf("failed to scan 4th parameter as band number: %s", err)
+	}
+	_, err = fmt.Sscanf(c.Params[4], "%f", &power.Power)
+	if err != nil {
+		return power, fmt.Errorf("failed to scan 5th parameter as power value: %s", err)
+	}
+	_, err = fmt.Sscanf(c.Params[5], "%f", &power.MaxEEG)
+	if err != nil {
+		return power, fmt.Errorf("failed to scan 6th parameter as max EEG: %s", err)
+	}
+	_, err = fmt.Sscanf(c.Params[6], "%f", &power.MinEEG)
+	if err != nil {
+		return power, fmt.Errorf("failed to scan 7th parameter as min EEG: %s", err)
+	}
+	return power, nil
 }
 
 func FindSCMD(s string) string {
