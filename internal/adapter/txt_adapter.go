@@ -2,7 +2,9 @@ package adapter
 
 import (
 	"context"
+	"encoding/csv"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 	"time"
@@ -13,11 +15,12 @@ import (
 	"github.com/Be3751/MaP1058-socket-client/internal/socket"
 )
 
-// テキストデータでトレンドデータの受信やコマンドの送受信をする
+// TxtAdapter テキストデータでトレンドデータの受信やコマンドの送受信をする
 type TxtAdapter interface {
 	StartRec(ctx context.Context, recTime time.Duration, recDateTime time.Time) error
 	EndRec(ctx context.Context) error
 	GetStatus(ctx context.Context) (model.Status, error)
+	GetTrendData(ctx context.Context, w CSVWriterGroup, at model.AnalysisType) error
 	GetSetting() (*model.Setting, error)
 }
 
@@ -130,7 +133,7 @@ func (a *txtAdapter) GetSetting() (*model.Setting, error) {
 			if err != nil {
 				return nil, fmt.Errorf("failed to convert %s to Analysis: %w", cmdStr, err)
 			}
-			s.Analysis = as
+			s.AnalysisType = as
 			analysisCnt++
 		case "GETSETTING":
 			// 値を含む受信コマンドは前半8チャネルのみ
@@ -153,6 +156,79 @@ func (a *txtAdapter) GetSetting() (*model.Setting, error) {
 		return nil, fmt.Errorf("invalid input: %w", err)
 	}
 	return &s, nil
+}
+
+type CSVWriterGroup struct {
+	EEGWriter   csv.Writer
+	HRWriter    io.Writer
+	AnsWriter   io.Writer
+	ExplsWriter io.Writer
+	RespWriter  io.Writer
+}
+
+func (a *txtAdapter) GetTrendData(ctx context.Context, w CSVWriterGroup, at model.AnalysisType) error {
+	var analyzedEEG model.AnalyzedEEG
+
+	err := w.EEGWriter.Write(analyzedEEG.ToCSVHeader(at))
+	if err != nil {
+		return fmt.Errorf("failed to write AnalyzedEEG header to csv: %w", err)
+	}
+
+	for a.Scanner.Scan() {
+		select {
+		case <-ctx.Done():
+			return nil
+		default:
+			cmdStr := a.Scanner.Text()
+			cmd, err := a.Parser.ToCommand(cmdStr)
+			if err != nil {
+				return fmt.Errorf("failed to convert %s to Command: %w", cmdStr, err)
+			}
+			switch cmd.Name {
+			case "DATA":
+				continue
+			case "DATA_HR":
+				continue
+			case "DATA_ANS":
+				continue
+			case "DATA_EXPLS":
+				continue
+			case "DATA_RESP":
+				continue
+			case "DATA_RESP2":
+				continue
+			case "DATA_RESP2UP":
+				continue
+			case "DATA_RESP2DP":
+				continue
+			case "DATA_EEG":
+				power, err := a.Parser.ToChannelPower(cmd)
+				if err != nil {
+					return fmt.Errorf("failed to convert %s to AnalyzedEEG: %w", cmdStr, err)
+				}
+				analyzedEEG[power.ChNum][power.BandNum] = power
+			case "EVENT_SEC":
+				err := w.EEGWriter.Write(analyzedEEG.ToCSVRow())
+				if err != nil {
+					return fmt.Errorf("failed to write AnalyzedEEG to csv: %w", err)
+				}
+			case "STATUS":
+				continue
+			case "EVENT_MARK":
+				continue
+			case "EVENT_MARKCANCEL":
+				continue
+			case "GUIDANCE":
+				continue
+			default:
+				return fmt.Errorf("invalid command: %s", cmdStr)
+			}
+		}
+	}
+	if err := a.Scanner.Err(); err != nil {
+		return fmt.Errorf("invalid input: %w", err)
+	}
+	return nil
 }
 
 func strSecond(d time.Duration) string {

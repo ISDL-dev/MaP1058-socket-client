@@ -129,7 +129,7 @@ func TestGetSetting(t *testing.T) {
 			Name:   "ANALYSIS",
 			Params: [10]string{"5", "4", "4", "4", "4", "3", "11", "9", "", ""},
 		}).Return(
-			model.Analysis{5, 4, 4, 4, 4, 3, 11, 9},
+			model.AnalysisType{5, 4, 4, 4, 4, 3, 11, 9},
 			nil,
 		))
 
@@ -190,7 +190,7 @@ func TestGetSetting(t *testing.T) {
 				{Upper: 6, Lower: 0},
 				{Upper: 5, Lower: 0},
 			},
-			Analysis: model.Analysis{5, 4, 4, 4, 4, 3, 11, 9},
+			AnalysisType: model.AnalysisType{5, 4, 4, 4, 4, 3, 11, 9},
 			Calibration: [8]model.ChannelCal{
 				{BaseAD: 0, CalAD: 409, EuHi: 0.05, EuLo: 0},
 				{BaseAD: 1, CalAD: 317, EuHi: 0.03, EuLo: 1},
@@ -259,3 +259,36 @@ func TestGetSetting(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
+
+//type MockCSVWriter struct {
+//	WriteFunc func(record []string) error
+//	FlushFunc func()
+//	ErrorFunc func() error
+//}
+//
+//func (m *MockCSVWriter) Write(record []string) error {
+//	return m.WriteFunc(record)
+//}
+//
+//func (m *MockCSVWriter) Flush() {
+//	m.FlushFunc()
+//}
+//
+//func (m *MockCSVWriter) Error() error {
+//	return m.ErrorFunc()
+//}
+//
+//func TestGetTrendData(t *testing.T) {
+//	t.Run("トレンドデータを取得する", func(t *testing.T) {
+//		ctrl := gomock.NewController(t)
+//		defer ctrl.Finish()
+//		conn := mock_socket.NewMockConn(ctrl)
+//		parser := mock_parser.NewMockParser(ctrl)
+//		scanner := mock_scanner.NewMockCustomScanner(ctrl)
+//		wg := CSVWriterGroup{}
+//
+//		txtAdapter := NewTxtAdapter(conn, scanner, parser)
+//		err := txtAdapter.GetTrendData(wg, model.AnalysisType{5, 4, 4, 4, 4, 3, 11, 9})
+//		assert.NoError(t, err)
+//	})
+//}
