@@ -18,17 +18,19 @@ func TestReceiveADValues(t *testing.T) {
 		defer ctrl.Finish()
 		socket := mock_socket.NewMockConn(ctrl)
 		parser := mock_parser.NewMockParser(ctrl)
-		ctx := context.Background()
+		ctx, cancel := context.WithCancel(context.Background())
 		binAdapter := NewBinAdapter(socket, parser)
 
 		buf := make([]byte, 1604)
 		socket.EXPECT().Read(buf).Return(1604, nil)
 		parser.EXPECT().ToSignals(buf).Return(&model.Signals{}, nil)
-		socket.EXPECT().Write([]byte{0x06}).Return(1, nil)
+		socket.EXPECT().Write([]byte{0x06}).DoAndReturn(func(p []byte) (int, error) {
+			cancel()
+			return 1, nil
+		})
 
-		signals, err := binAdapter.ReceiveADValues(ctx)
+		err := binAdapter.WriteADValues(ctx, nil)
 		assert.NoError(t, err)
-		assert.NotNil(t, signals)
 	})
 
 	t.Run("サムチェックに1度失敗してリトライする", func(t *testing.T) {
@@ -36,7 +38,7 @@ func TestReceiveADValues(t *testing.T) {
 		defer ctrl.Finish()
 		socket := mock_socket.NewMockConn(ctrl)
 		parser := mock_parser.NewMockParser(ctrl)
-		ctx := context.Background()
+		ctx, cancel := context.WithCancel(context.Background())
 		binAdapter := NewBinAdapter(socket, parser)
 
 		buf := make([]byte, 1604)
@@ -45,10 +47,12 @@ func TestReceiveADValues(t *testing.T) {
 		socket.EXPECT().Write([]byte{0x15}).Return(1, nil)
 		socket.EXPECT().Read(buf).Return(1604, nil)
 		parser.EXPECT().ToSignals(buf).Return(&model.Signals{}, nil)
-		socket.EXPECT().Write([]byte{0x6}).Return(1, nil)
+		socket.EXPECT().Write([]byte{0x6}).DoAndReturn(func(p []byte) (int, error) {
+			cancel()
+			return 1, nil
+		})
 
-		signals, err := binAdapter.ReceiveADValues(ctx)
+		err := binAdapter.WriteADValues(ctx, nil)
 		assert.NoError(t, err)
-		assert.NotNil(t, signals)
 	})
 }
