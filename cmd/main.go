@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/Be3751/MaP1058-socket-client/internal/adapter"
@@ -56,22 +57,22 @@ func main() {
 		}
 	}()
 
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
 	parser := parser.NewParser()
 	scanner := scanner.NewCustomScanner(txtAdConn)
 	txtAdapter := adapter.NewTxtAdapter(txtAdConn, scanner, parser)
 	binAdapter := adapter.NewBinAdapter(binAdConn, parser)
+	csvWriterGroup := adapter.CSVWriterGroup{}
 
-	err = txtAdapter.StartRec(ctx, time.Second*60, time.Now())
+	err = txtAdapter.StartRec(time.Second*60, time.Now())
 	if err != nil {
 		panic(err)
 	}
 	defer func() {
-		err = txtAdapter.EndRec(ctx)
+		err = txtAdapter.EndRec()
 		if err != nil {
 			panic(err)
 		}
-		os.Exit(0)
 	}()
 
 	setting, err := txtAdapter.GetSetting()
@@ -80,25 +81,22 @@ func main() {
 	}
 	// TODO: 設定値をファイルに書き込む
 
-	// TODO: 生波形の受信と解析データの受信を並行して行う
-	// TODO: ENDコマンドを受信するまで、生波形の受信とファイル書き込みを繰り返す
-	for i := 0; i < 10; i++ {
-		s, err := binAdapter.ReceiveADValues(ctx)
+	go func() {
+		err := binAdapter.WriteRawSignal(ctx, os.Stdout)
 		if err != nil {
 			panic(err)
 		}
-		err = s.SetMeasurements(setting.Calibration)
+	}()
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		err := txtAdapter.WriteTrendData(ctx, csvWriterGroup, setting.AnalysisType)
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(s)
-		// // TODO: 計測値をファイルに書き込む
-		// _, err = file.WriteString()
-		// if err != nil {
-		// 	panic(err)
-		// }
-	}
-
-	// TODO: ENDコマンドを受信するまで、解析データの受信とファイル書き込みを繰り返す
-	// TODO: 計測値をファイルに書き込む
+	}()
+	// ENDコマンドを送信するまで待機（ENDコマンドを送信する処理が別途必要）
+	wg.Wait()
+	cancel()
 }

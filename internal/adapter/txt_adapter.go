@@ -3,6 +3,7 @@ package adapter
 import (
 	"context"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -17,10 +18,10 @@ import (
 
 // TxtAdapter テキストデータでトレンドデータの受信やコマンドの送受信をする
 type TxtAdapter interface {
-	StartRec(ctx context.Context, recTime time.Duration, recDateTime time.Time) error
-	EndRec(ctx context.Context) error
-	GetStatus(ctx context.Context) (model.Status, error)
-	GetTrendData(ctx context.Context, w CSVWriterGroup, at model.AnalysisType) error
+	StartRec(recTime time.Duration, recDateTime time.Time) error
+	EndRec() error
+	GetStatus() (model.Status, error)
+	WriteTrendData(ctx context.Context, w CSVWriterGroup, at model.AnalysisType) error
 	GetSetting() (*model.Setting, error)
 }
 
@@ -38,7 +39,7 @@ type txtAdapter struct {
 	Parser  parser.Parser
 }
 
-func (a *txtAdapter) StartRec(ctx context.Context, recSecond time.Duration, recDateTime time.Time) error {
+func (a *txtAdapter) StartRec(recSecond time.Duration, recDateTime time.Time) error {
 	recDateTimeParam := recDateTime.Format("2006/01/02 15-04-05")
 	recSecondParam := strSecond(recSecond)
 	sCmd := model.Command{
@@ -62,7 +63,7 @@ func (a *txtAdapter) StartRec(ctx context.Context, recSecond time.Duration, recD
 	return nil
 }
 
-func (a *txtAdapter) EndRec(ctx context.Context) error {
+func (a *txtAdapter) EndRec() error {
 	sCmd := model.Command{
 		Name: "END",
 	}
@@ -83,7 +84,7 @@ func (a *txtAdapter) EndRec(ctx context.Context) error {
 	return nil
 }
 
-func (a *txtAdapter) GetStatus(ctx context.Context) (model.Status, error) {
+func (a *txtAdapter) GetStatus() (model.Status, error) {
 	sCmd := model.Command{
 		Name: "STATUS",
 	}
@@ -166,7 +167,7 @@ type CSVWriterGroup struct {
 	RespWriter  io.Writer
 }
 
-func (a *txtAdapter) GetTrendData(ctx context.Context, w CSVWriterGroup, at model.AnalysisType) error {
+func (a *txtAdapter) WriteTrendData(ctx context.Context, w CSVWriterGroup, at model.AnalysisType) error {
 	var analyzedEEG model.AnalyzedEEG
 
 	err := w.EEGWriter.Write(analyzedEEG.ToCSVHeader(at))
@@ -177,7 +178,7 @@ func (a *txtAdapter) GetTrendData(ctx context.Context, w CSVWriterGroup, at mode
 	for a.Scanner.Scan() {
 		select {
 		case <-ctx.Done():
-			return nil
+			return errors.New("forced to stop writing trend data")
 		default:
 			cmdStr := a.Scanner.Text()
 			cmd, err := a.Parser.ToCommand(cmdStr)
@@ -220,6 +221,8 @@ func (a *txtAdapter) GetTrendData(ctx context.Context, w CSVWriterGroup, at mode
 				continue
 			case "GUIDANCE":
 				continue
+			case "END":
+				break
 			default:
 				return fmt.Errorf("invalid command: %s", cmdStr)
 			}
