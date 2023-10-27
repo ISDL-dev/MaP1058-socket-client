@@ -3,6 +3,7 @@ package adapter
 import (
 	"context"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -20,7 +21,7 @@ type TxtAdapter interface {
 	StartRec(ctx context.Context, recTime time.Duration, recDateTime time.Time) error
 	EndRec(ctx context.Context) error
 	GetStatus(ctx context.Context) (model.Status, error)
-	GetTrendData(ctx context.Context, w CSVWriterGroup, at model.AnalysisType) error
+	WriteTrendData(ctx context.Context, w CSVWriterGroup, at model.AnalysisType) error
 	GetSetting() (*model.Setting, error)
 }
 
@@ -166,7 +167,7 @@ type CSVWriterGroup struct {
 	RespWriter  io.Writer
 }
 
-func (a *txtAdapter) GetTrendData(ctx context.Context, w CSVWriterGroup, at model.AnalysisType) error {
+func (a *txtAdapter) WriteTrendData(ctx context.Context, w CSVWriterGroup, at model.AnalysisType) error {
 	var analyzedEEG model.AnalyzedEEG
 
 	err := w.EEGWriter.Write(analyzedEEG.ToCSVHeader(at))
@@ -177,7 +178,7 @@ func (a *txtAdapter) GetTrendData(ctx context.Context, w CSVWriterGroup, at mode
 	for a.Scanner.Scan() {
 		select {
 		case <-ctx.Done():
-			return nil
+			return errors.New("forced to stop writing trend data")
 		default:
 			cmdStr := a.Scanner.Text()
 			cmd, err := a.Parser.ToCommand(cmdStr)
@@ -220,6 +221,8 @@ func (a *txtAdapter) GetTrendData(ctx context.Context, w CSVWriterGroup, at mode
 				continue
 			case "GUIDANCE":
 				continue
+			case "END":
+				break
 			default:
 				return fmt.Errorf("invalid command: %s", cmdStr)
 			}
