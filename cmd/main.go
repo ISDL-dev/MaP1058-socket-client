@@ -64,12 +64,12 @@ func main() {
 	binAdapter := adapter.NewBinAdapter(binAdConn, parser)
 	csvWriterGroup := adapter.CSVWriterGroup{}
 
-	err = txtAdapter.StartRec(ctx, time.Second*60, time.Now())
+	err = txtAdapter.StartRec(time.Second*60, time.Now())
 	if err != nil {
 		panic(err)
 	}
 	defer func() {
-		err = txtAdapter.EndRec(ctx)
+		err = txtAdapter.EndRec()
 		if err != nil {
 			panic(err)
 		}

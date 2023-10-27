@@ -1,7 +1,6 @@
 package adapter
 
 import (
-	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -30,10 +29,9 @@ func TestStartRec(t *testing.T) {
 			},
 		)
 		conn.EXPECT().Read(gomock.Any()).SetArg(0, []byte(sCmdStr)).Return(len(sCmdStr), nil)
-		ctx := context.Background()
 
 		txtAdapter := NewTxtAdapter(conn, scanner, parser)
-		err := txtAdapter.StartRec(ctx, time.Second*300, time.Date(2023, 1, 1, 12, 0, 0, 0, time.Local))
+		err := txtAdapter.StartRec(time.Second*300, time.Date(2023, 1, 1, 12, 0, 0, 0, time.Local))
 		assert.NoError(t, err)
 	})
 }
@@ -54,10 +52,9 @@ func TestEndRec(t *testing.T) {
 			},
 		)
 		conn.EXPECT().Read(gomock.Any()).SetArg(0, []byte(sCmdStr)).Return(len(sCmdStr), nil)
-		ctx := context.Background()
 
 		txtAdapter := NewTxtAdapter(conn, scanner, parser)
-		err := txtAdapter.EndRec(ctx)
+		err := txtAdapter.EndRec()
 		assert.NoError(t, err)
 	})
 }
@@ -79,11 +76,10 @@ func TestGetStatus(t *testing.T) {
 		)
 		rCmd := []byte("<SCMD>STATUS:A:Acq,,,,,,,,,</SCMD>")
 		conn.EXPECT().Read(gomock.Any()).SetArg(0, rCmd).Return(len(rCmd), nil)
-		ctx := context.Background()
 		parser.EXPECT().ToCommand(string(rCmd)).Return(model.Command{Name: "STATUS", Params: [10]string{"Acq"}}, nil)
 
 		txtAdapter := NewTxtAdapter(conn, scanner, parser)
-		status, err := txtAdapter.GetStatus(ctx)
+		status, err := txtAdapter.GetStatus()
 		assert.NoError(t, err)
 		assert.Equal(t, "Acq", string(status))
 	})
