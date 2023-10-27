@@ -82,7 +82,7 @@ func main() {
 	// TODO: 設定値をファイルに書き込む
 
 	go func() {
-		err := binAdapter.WriteADValues(ctx, os.Stdout)
+		err := binAdapter.WriteRawSignal(ctx, os.Stdout)
 		if err != nil {
 			panic(err)
 		}

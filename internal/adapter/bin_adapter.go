@@ -12,8 +12,8 @@ import (
 )
 
 type BinAdapter interface {
-	// WriteADValues AD値を受信する
-	WriteADValues(ctx context.Context, w io.Writer) error
+	// WriteRawSignal AD値を受信する
+	WriteRawSignal(ctx context.Context, w io.Writer) error
 }
 
 func NewBinAdapter(c socket.Conn, p parser.Parser) BinAdapter {
@@ -28,7 +28,7 @@ type binAdapter struct {
 	Parser parser.Parser
 }
 
-func (a *binAdapter) WriteADValues(ctx context.Context, w io.Writer) error {
+func (a *binAdapter) WriteRawSignal(ctx context.Context, w io.Writer) error {
 	for {
 		select {
 		case <-ctx.Done():
