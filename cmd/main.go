@@ -14,14 +14,13 @@ import (
 	"github.com/Be3751/MaP1058-socket-client/utils/net"
 )
 
-// TODO: クライアント側のIPアドレスを自動取得する処理も必要
 func main() {
 	clientIP, err := net.GetMyLocalIP()
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
-	// TODO: サーバー側のIPアドレスを動的に取得する処理も必要
+
 	serverIP := "192.168.10.101"
 	txtAdConf := socket.SocketConfig{
 		ServerIP:   serverIP,
@@ -74,44 +73,43 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	// defer func() {
-	// 	err = txtAdapter.EndRec(ctx)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// 	os.Exit(0)
-	// }()
+	defer func() {
+		err = txtAdapter.EndRec(ctx)
+		if err != nil {
+			fmt.Println(err)
+			panic(err)
+		}
+		fmt.Println("end recording")
+
+		err = txtAdConn.Close()
+		if err != nil {
+			fmt.Println(err)
+			panic(err)
+		}
+		fmt.Println("close txt connection")
+
+		err = binAdConn.Close()
+		if err != nil {
+			fmt.Println(err)
+			panic(err)
+		}
+		fmt.Println("close bin connection")
+		os.Exit(0)
+	}()
 
 	// TODO: parseする前の受信コマンドを実際に確認する（parserにバグがある可能性）
 	setting, err := txtAdapter.GetSetting()
 	if err != nil {
 		panic(err)
 	}
-	// TODO: 設定値をファイルに書き込む
+	fmt.Println(setting)
 	for {
 		tmp := make([]byte, 128)
-		_, err := txtAdConn.Read(tmp)
+		n, err := txtAdConn.Read(tmp)
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println(string(tmp))
+		fmt.Println(string(tmp[:n]))
 	}
 
-	// TODO: 生波形の受信と解析データの受信を並行して行う
-	// TODO: ENDコマンドを受信するまで、生波形の受信とファイル書き込みを繰り返す
-	go func() {
-		time.Sleep(time.Second * 2)
-		cancel()
-	}()
-	go func() {
-		fmt.Println("start to get trend data")
-		err := txtAdapter.GetTrendData(ctx, writerGroup, setting.AnalysisType)
-		if err != nil {
-			panic(err)
-		}
-	}()
-	time.Sleep(time.Second * 5)
-
-	// TODO: ENDコマンドを受信するまで、解析データの受信とファイル書き込みを繰り返す
-	// TODO: 計測値をファイルに書き込む
 }
