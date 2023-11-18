@@ -11,27 +11,39 @@ func TestSetMeasurements(t *testing.T) {
 		signals := NewSignals()
 		for ch := range signals.Channels {
 			for pnt := range signals.Channels[ch].ADValues {
-				signals.Channels[ch].ADValues[pnt] = 1
+				signals.Channels[ch].ADValues[pnt] = 2
 			}
 		}
 		cal := Calibration{
-			{1, 1, 0, 2},
-			{1, 1, 0, 0},
-			{1, 1, 0, 0},
-			{1, 1, 0, 0},
-			{1, 1, 0, 0},
-			{1, 1, 0, 0},
-			{1, 1, 0, 0},
-			{1, 1, 0, 0},
+			{0, 1, 2, 2},
+			{1, 1, 2, 1},
+			{1, 1, 2, 1},
+			{1, 1, 2, 1},
+			{1, 1, 2, 1},
+			{1, 1, 2, 1},
+			{1, 1, 2, 1},
+			{1, 1, 2, 1},
 		}
-		err := signals.SetMeasurements(cal)
+		at := AnalysisType{
+			EEGCh,
+			EEGCh,
+			EEGCh,
+			EEGCh,
+			RRIntCh,
+			NoAnalysis,
+			EEGCh,
+			EEGCh,
+		}
+		err := signals.SetMeasurements(cal, at)
 		assert.NoError(t, err)
 		for ch := range signals.Channels {
 			for pnt := range signals.Channels[ch].Measurements {
 				if ch == 0 {
 					assert.Equal(t, float64(2), signals.Channels[ch].Measurements[pnt])
-				} else {
+				} else if ch == 5 {
 					assert.Equal(t, float64(0), signals.Channels[ch].Measurements[pnt])
+				} else {
+					assert.Equal(t, float64(2), signals.Channels[ch].Measurements[pnt])
 				}
 			}
 		}
@@ -49,7 +61,17 @@ func TestSetMeasurements(t *testing.T) {
 			{1, 0, 0, 0},
 			{1, 0, 0, 0},
 		}
-		err := signals.SetMeasurements(cal)
+		at := AnalysisType{
+			EEGCh,
+			EEGCh,
+			EEGCh,
+			EEGCh,
+			RRIntCh,
+			NoAnalysis,
+			EEGCh,
+			EEGCh,
+		}
+		err := signals.SetMeasurements(cal, at)
 		assert.Error(t, err)
 	})
 }
