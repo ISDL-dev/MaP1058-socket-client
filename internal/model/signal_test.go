@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -73,5 +74,40 @@ func TestSetMeasurements(t *testing.T) {
 		}
 		err := signals.SetMeasurements(cal, at)
 		assert.Error(t, err)
+	})
+}
+
+func TestToRecords(t *testing.T) {
+	t.Run("計測値をcsvのレコードに変換", func(t *testing.T) {
+		signals := NewSignals()
+		for ch := range signals.Channels {
+			for pnt := range signals.Channels[ch].Measurements {
+				signals.Channels[ch].Measurements[pnt] = float64(1)
+			}
+		}
+		records := signals.ToRecords(0)
+		assert.Equal(t, 50, len(records))
+		for i, record := range records {
+			assert.Equal(t, 9, len(record))
+			for j, cell := range record {
+				if j == 0 {
+					assert.Equal(t, fmt.Sprint(i+1), record[j])
+				} else {
+					assert.Equal(t, fmt.Sprintf("%.5f", 1.0), cell)
+				}
+			}
+		}
+		records = signals.ToRecords(5)
+		assert.Equal(t, 50, len(records))
+		for i, record := range records {
+			assert.Equal(t, 9, len(record))
+			for j, cell := range record {
+				if j == 0 {
+					assert.Equal(t, fmt.Sprint(i+50*5+1), record[j])
+				} else {
+					assert.Equal(t, fmt.Sprintf("%.5f", 1.0), cell)
+				}
+			}
+		}
 	})
 }
