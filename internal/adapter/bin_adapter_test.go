@@ -12,9 +12,9 @@ import (
 	"go.uber.org/mock/gomock"
 )
 
-// exclude
-func ExTestReceiveADValues(t *testing.T) {
+func TestReceiveADValues(t *testing.T) {
 	t.Run("エラーなくAD値を受信する", func(t *testing.T) {
+		t.Skip("実環境で動作検証する")
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		socket := mock_socket.NewMockConn(ctrl)
@@ -35,6 +35,7 @@ func ExTestReceiveADValues(t *testing.T) {
 	})
 
 	t.Run("サムチェックに1度失敗してリトライする", func(t *testing.T) {
+		t.Skip("実環境で動作検証する")
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		socket := mock_socket.NewMockConn(ctrl)

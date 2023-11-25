@@ -258,8 +258,9 @@ func TestGetSetting(t *testing.T) {
 }
 
 // exclude
-func ExTestGetTrendData(t *testing.T) {
+func TestGetTrendData(t *testing.T) {
 	t.Run("トレンドデータを取得する", func(t *testing.T) {
+		t.Skip("実環境で動作検証する")
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		conn := mock_socket.NewMockConn(ctrl)
