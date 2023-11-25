@@ -1,6 +1,7 @@
 package adapter
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -256,35 +257,19 @@ func TestGetSetting(t *testing.T) {
 	})
 }
 
-//type MockCSVWriter struct {
-//	WriteFunc func(record []string) error
-//	FlushFunc func()
-//	ErrorFunc func() error
-//}
-//
-//func (m *MockCSVWriter) Write(record []string) error {
-//	return m.WriteFunc(record)
-//}
-//
-//func (m *MockCSVWriter) Flush() {
-//	m.FlushFunc()
-//}
-//
-//func (m *MockCSVWriter) Error() error {
-//	return m.ErrorFunc()
-//}
-//
-//func TestGetTrendData(t *testing.T) {
-//	t.Run("トレンドデータを取得する", func(t *testing.T) {
-//		ctrl := gomock.NewController(t)
-//		defer ctrl.Finish()
-//		conn := mock_socket.NewMockConn(ctrl)
-//		parser := mock_parser.NewMockParser(ctrl)
-//		scanner := mock_scanner.NewMockCustomScanner(ctrl)
-//		wg := CSVWriterGroup{}
-//
-//		txtAdapter := NewTxtAdapter(conn, scanner, parser)
-//		err := txtAdapter.GetTrendData(wg, model.AnalysisType{5, 4, 4, 4, 4, 3, 11, 9})
-//		assert.NoError(t, err)
-//	})
-//}
+// exclude
+func TestGetTrendData(t *testing.T) {
+	t.Run("トレンドデータを取得する", func(t *testing.T) {
+		t.Skip("実環境で動作検証する")
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		conn := mock_socket.NewMockConn(ctrl)
+		parser := mock_parser.NewMockParser(ctrl)
+		scanner := mock_scanner.NewMockCustomScanner(ctrl)
+		wg := CSVWriterGroup{}
+
+		txtAdapter := NewTxtAdapter(conn, scanner, parser)
+		err := txtAdapter.WriteTrendData(context.Background(), wg, model.AnalysisType{5, 4, 4, 4, 4, 3, 11, 9})
+		assert.NoError(t, err)
+	})
+}
