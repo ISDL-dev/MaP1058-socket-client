@@ -14,6 +14,10 @@ import (
 	"github.com/Be3751/MaP1058-socket-client/utils/net"
 )
 
+const (
+	outputDir = "output"
+)
+
 // TODO: クライアント側のIPアドレスを自動取得する処理も必要
 func main() {
 	clientIP, err := net.GetMyLocalIP()
@@ -61,7 +65,19 @@ func main() {
 	parser := parser.NewParser()
 	scanner := scanner.NewCustomScanner(txtAdConn)
 	txtAdapter := adapter.NewTxtAdapter(txtAdConn, scanner, parser)
-	binAdapter := adapter.NewBinAdapter(binAdConn, parser)
+
+	sgFilePath := fmt.Sprintf("%s/rawwave_%s.csv", outputDir, time.Now().Format("20060102150405"))
+	sgFile, err := os.Create(sgFilePath)
+	if err != nil {
+		panic(err)
+	}
+	defer func() {
+		if err := sgFile.Close(); err != nil {
+			panic(err)
+		}
+	}()
+
+	binAdapter := adapter.NewBinAdapter(binAdConn, parser, sgFile)
 	csvWriterGroup := adapter.CSVWriterGroup{}
 
 	err = txtAdapter.StartRec(time.Second*60, time.Now())
@@ -82,7 +98,7 @@ func main() {
 	// TODO: 設定値をファイルに書き込む
 
 	go func() {
-		err := binAdapter.WriteRawSignal(ctx, os.Stdout)
+		err := binAdapter.WriteRawSignal(ctx, setting)
 		if err != nil {
 			panic(err)
 		}
@@ -99,4 +115,5 @@ func main() {
 	// ENDコマンドを送信するまで待機（ENDコマンドを送信する処理が別途必要）
 	wg.Wait()
 	cancel()
+
 }

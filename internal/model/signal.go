@@ -59,11 +59,24 @@ func (s *Signals) SetMeasurements(cal Calibration, at AnalysisType) error {
 	return nil
 }
 
-func (s *Signals) ToCSVRow() error {
-	for i, ch := range s.Channels {
-		for j, m := range ch.Measurements {
-			fmt.Printf("%d,%d,%f\n", i+1, j+1, m)
+// ToRecords makes records for csv from Signals. The first column of the records is the point number.
+// The offset argument indicates how many times the signal has been received. So, the first offset should be 0.
+func (s *Signals) ToRecords(offset int) [][]string {
+	var records [][]string
+	pnt := offset * NumPoints
+	for p := 0; p < NumPoints; p++ {
+		var record []string
+		record = append(record, fmt.Sprintf("%d", pnt+1))
+		for _, ch := range s.Channels {
+			record = append(record, fmt.Sprintf("%.5f", ch.Measurements[p]))
 		}
+		records = append(records, record)
+		pnt++
 	}
-	return nil
+	return records
+}
+
+// SignalHeader returns the CSV Header for raw signal
+func SignalHeader() []string {
+	return []string{"point", "ch1", "ch2", "ch3", "ch4", "ch5", "ch6", "ch7", "ch8"}
 }
