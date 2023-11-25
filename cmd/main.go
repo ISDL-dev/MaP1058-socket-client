@@ -62,9 +62,9 @@ func main() {
 	}()
 
 	ctx, cancel := context.WithCancel(context.Background())
-	parser := parser.NewParser()
-	scanner := scanner.NewCustomScanner(txtAdConn)
-	txtAdapter := adapter.NewTxtAdapter(txtAdConn, scanner, parser)
+	ps := parser.NewParser()
+	sc := scanner.NewCustomScanner(txtAdConn)
+	txtAdapter := adapter.NewTxtAdapter(txtAdConn, sc, ps)
 
 	sgFilePath := fmt.Sprintf("%s/rawwave_%s.csv", outputDir, time.Now().Format("20060102150405"))
 	sgFile, err := os.Create(sgFilePath)
@@ -77,7 +77,7 @@ func main() {
 		}
 	}()
 
-	binAdapter := adapter.NewBinAdapter(binAdConn, parser, sgFile)
+	binAdapter := adapter.NewBinAdapter(binAdConn, ps, sgFile)
 	csvWriterGroup := adapter.CSVWriterGroup{}
 
 	err = txtAdapter.StartRec(time.Second*60, time.Now())
