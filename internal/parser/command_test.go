@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"fmt"
+	"github.com/Be3751/MaP1058-socket-client/internal/model"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -42,4 +44,47 @@ func TestToCommand(t *testing.T) {
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), ":A:")
 	})
+}
+
+func Test_parser_ToChannelPower(t *testing.T) {
+	type args struct {
+		c model.Command
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    model.ChannelPower
+		wantErr assert.ErrorAssertionFunc
+	}{
+		{
+			name: "正常系",
+			args: args{
+				c: model.Command{
+					Name: "DATA_EEG",
+					Params: [model.NumSeparator + 1]string{
+						"4", "215", "1", "3", "41.16424", "16.70227", "-17.6422", "", "", "",
+					},
+				},
+			},
+			want: model.ChannelPower{
+				Time:    215,
+				ChNum:   1,
+				BandNum: model.Alpha,
+				Power:   41.16424,
+				MaxEEG:  16.70227,
+				MinEEG:  -17.6422,
+			},
+			wantErr: assert.NoError,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := NewParser()
+			got, err := p.ToChannelPower(tt.args.c)
+			if !tt.wantErr(t, err, fmt.Sprintf("ToChannelPower(%v)", tt.args.c)) {
+				return
+			}
+			assert.Equalf(t, tt.want, got, "ToChannelPower(%v)", tt.args.c)
+		})
+	}
 }
