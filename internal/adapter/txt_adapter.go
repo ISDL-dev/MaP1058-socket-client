@@ -168,6 +168,14 @@ type CSVWriterGroup struct {
 }
 
 func (a *txtAdapter) WriteTrendData(ctx context.Context, w CSVWriterGroup, at model.AnalysisType) error {
+	defer func() {
+		err := a.Conn.Close()
+		if err != nil {
+			err = fmt.Errorf("failed to close connection: %w", err)
+			panic(err)
+		}
+	}()
+
 	var analyzedEEG model.AnalyzedEEG
 
 	err := w.EEGWriter.Write(analyzedEEG.ToCSVHeader(at))

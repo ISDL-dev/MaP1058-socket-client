@@ -9,6 +9,7 @@ import (
 type Conn interface {
 	Read([]byte) (int, error)
 	Write([]byte) (int, error)
+	Close() error
 }
 
 func Connect(conf SocketConfig) (*net.TCPConn, error) {

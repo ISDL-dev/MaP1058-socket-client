@@ -35,6 +35,14 @@ const (
 )
 
 func (a *binAdapter) WriteRawSignal(ctx context.Context, stg *model.Setting) (err error) {
+	defer func() {
+		err := a.Conn.Close()
+		if err != nil {
+			err = fmt.Errorf("failed to close connection: %w", err)
+			panic(err)
+		}
+	}()
+
 	csvWriter := csv.NewWriter(a.File)
 	defer func() {
 		csvWriter.Flush()

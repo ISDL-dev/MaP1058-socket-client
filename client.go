@@ -24,6 +24,7 @@ type Client interface {
 type client struct {
 	bin    adapter.BinAdapter
 	txt    adapter.TxtAdapter
+	raw    *os.File
 	ctx    context.Context
 	cancel context.CancelFunc
 	config Config
@@ -57,12 +58,7 @@ func NewClient(c Config) (Client, error) {
 	if err != nil {
 		panic(err)
 	}
-	defer func() {
-		err = binAdConn.Close()
-		if err != nil {
-			panic(err)
-		}
-	}()
+
 	txtAdConf := socket.SocketConfig{
 		ServerIP:   c.ServerIP,
 		ServerPort: "3000",
@@ -73,12 +69,6 @@ func NewClient(c Config) (Client, error) {
 	if err != nil {
 		panic(err)
 	}
-	defer func() {
-		err = txtAdConn.Close()
-		if err != nil {
-			panic(err)
-		}
-	}()
 
 	// make file for saving raw signal
 	sgFilePath := fmt.Sprintf("%s/rawwave_%s.csv", c.SaveDir, time.Now().Format("20060102150405"))
@@ -86,11 +76,6 @@ func NewClient(c Config) (Client, error) {
 	if err != nil {
 		panic(err)
 	}
-	defer func() {
-		if err := sgFile.Close(); err != nil {
-			panic(err)
-		}
-	}()
 
 	ps := parser.NewParser()
 	binAdapter := adapter.NewBinAdapter(binAdConn, ps, sgFile)
@@ -102,6 +87,7 @@ func NewClient(c Config) (Client, error) {
 	return &client{
 		binAdapter,
 		txtAdapter,
+		sgFile,
 		ctx,
 		cancel,
 		c,
@@ -147,6 +133,9 @@ func (c *client) Start(rec time.Duration) error {
 		case err := <-bErrChan:
 			if err != nil {
 				return err
+			}
+			if err = c.raw.Close(); err != nil {
+				return fmt.Errorf("failed to close raw file: %w", err)
 			}
 		case err := <-tErrChan:
 			if err != nil {
