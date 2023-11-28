@@ -12,7 +12,9 @@ import (
 func (p *parser) ToSignals(b []byte) (*model.Signals, error) {
 	s := model.NewSignals()
 	if len(b) != int(model.NumTotalBytes) {
-		return nil, fmt.Errorf("the arg b's len must be %d", model.NumTotalBytes)
+		return nil, fmt.Errorf(
+			"the arg b's len must be %d, the actual len was %d", 
+			model.NumTotalBytes, len(b))
 	}
 	err := sumCheck(b)
 	if err != nil {
