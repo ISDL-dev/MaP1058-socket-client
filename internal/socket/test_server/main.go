@@ -3,11 +3,10 @@ package main
 
 import (
 	"fmt"
+	utilsNet "github.com/Be3751/MaP1058-socket-client/internal/utils/net"
 	"net"
 	"os"
 	"time"
-
-	utilsNet "github.com/Be3751/MaP1058-socket-client/utils/net"
 )
 
 func main() {
