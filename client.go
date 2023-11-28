@@ -3,6 +3,7 @@ package MaP1058_socket_client
 import (
 	"context"
 	"fmt"
+	"github.com/Be3751/MaP1058-socket-client/internal/utils/net"
 	"os"
 	"time"
 
@@ -10,11 +11,13 @@ import (
 	"github.com/Be3751/MaP1058-socket-client/internal/parser"
 	"github.com/Be3751/MaP1058-socket-client/internal/scanner"
 	"github.com/Be3751/MaP1058-socket-client/internal/socket"
-	"github.com/Be3751/MaP1058-socket-client/utils/net"
 )
 
 type Client interface {
+	// Start sends a command to start recording and receives some commands
+	// containing signals and measurement conditions.
 	Start(rec time.Duration) error
+	// Stop sends a command to stop recording.
 	Stop() error
 }
 
@@ -28,9 +31,12 @@ type client struct {
 
 var _ Client = (*client)(nil)
 
+// Config is the configuration for MaP1058 client
 type Config struct {
+	// ServerIP is the IP address of MaP1058.
 	ServerIP string
-	SaveDir  string
+	// SaveDir is the directory to save received signals and configuration.
+	SaveDir string
 }
 
 func NewClient(c Config) (Client, error) {
