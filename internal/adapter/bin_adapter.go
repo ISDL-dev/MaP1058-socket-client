@@ -98,12 +98,14 @@ func (a *binAdapter) receiveAD() (*model.Signals, error) {
 	}
 
 	s, err := a.Parser.ToSignals(rawBytes[:n])
-	if _, ok := err.(*parser.FailureSumCheckError); ok {
-		if err := a.sendNAK(); err != nil {
-			return nil, fmt.Errorf("%s, and failed to send NAK to the server", err.Error())
+	if err != nil {
+		if _, ok := err.(*parser.FailureSumCheckError); ok {
+			if err := a.sendNAK(); err != nil {
+				return nil, fmt.Errorf("%s, and failed to send NAK to the server", err.Error())
+			}
+		} else {
+			return nil, fmt.Errorf("failed to parse binary data to Signals: %w", err)
 		}
-	} else {
-		return nil, fmt.Errorf("failed to parse binary data to Signals: %w", err)
 	}
 	return s, nil
 }
