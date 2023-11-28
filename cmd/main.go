@@ -11,7 +11,7 @@ const (
 
 func main() {
 	conf := client.Config{
-		ServerIP: "192.168.10.105",
+		ServerIP: "192.168.10.101",
 		SaveDir:  outputDir,
 	}
 
