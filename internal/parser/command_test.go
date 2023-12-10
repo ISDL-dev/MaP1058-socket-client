@@ -21,6 +21,21 @@ func TestToCommand(t *testing.T) {
 		assert.Equal(t, expectedParams, cmd.Params)
 	})
 
+	t.Run("GETSETTINGコマンドのパース", func(t *testing.T) {
+		rCmdStr := "<SCMD>GETSETTING:A:\"CH1,BASE_AD=0,CAL_AD=2048,EU_HI=2.5,EU_LO=0,\",,,,,,,,,</SCMD>"
+		parser := NewParser()
+		cmd, err := parser.ToCommand(rCmdStr)
+		assert.NoError(t, err)
+		assert.Equal(t, "GETSETTING", cmd.Name)
+		expectedParams := [10]string{}
+		expectedParams[0] = "CH1"
+		expectedParams[1] = "BASE_AD=0"
+		expectedParams[2] = "CAL_AD=2048"
+		expectedParams[3] = "EU_HI=2.5"
+		expectedParams[4] = "EU_LO=0"
+		assert.Equal(t, expectedParams, cmd.Params)
+	})
+
 	t.Run("<SCMD>...</SCMD>の構造になっていない", func(t *testing.T) {
 		rCmdStr := "<S>START:A:300,2023/01/01 12-00-00,,,,,,,,</S>"
 		parser := NewParser()
