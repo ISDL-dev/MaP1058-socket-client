@@ -88,3 +88,53 @@ func Test_parser_ToChannelPower(t *testing.T) {
 		})
 	}
 }
+
+func TestToChannelCal(t *testing.T) {
+	type args struct {
+		c model.Command
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    model.ChannelCal
+		wantErr error
+	}{
+		{
+			"受信に成功する",
+			args{c: model.Command{
+				Name:   "GETSETTING",
+				Params: [10]string{"CH1", "BASE_AD=0", "CAL_AD=2048", "EU_HI=2.5", "EU_LO=0", "", "", "", "", ""},
+			}},
+			model.ChannelCal{BaseAD: 0, CalAD: 2048, EuHi: 2.5, EuLo: 0},
+			nil,
+		},
+		{
+			"不適切なコマンド名でエラー",
+			args{c: model.Command{
+				Name:   "GET-SETTING",
+				Params: [10]string{"CH1", "BASE_AD=0", "CAL_AD=2048", "EU_HI=2.5", "EU_LO=0", "", "", "", "", ""},
+			}},
+			model.ChannelCal{},
+			fmt.Errorf("the received command is not GETSETTING: GET-SETTING: %s", "GET-SETTING"),
+		},
+		{
+			"パラメータ数が不適切でエラー",
+			args{c: model.Command{
+				Name:   "GETSETTING",
+				Params: [10]string{"CH1", "BASE_AD=0", "CAL_AD=2048", "EU_HI=2.5", "EU_LO=0", "hoge", "", "", ""},
+			}},
+			model.ChannelCal{},
+			fmt.Errorf("hoge"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &parser{}
+			got, err := p.ToChannelCal(tt.args.c)
+			if err != nil {
+				assert.Equalf(t, tt.want, got, "ToChannelCal(%v)", tt.args.c)
+			}
+			assert.Equalf(t, tt.want, got, "want: %v, got: %v", tt.want, got)
+		})
+	}
+}
