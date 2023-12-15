@@ -12,9 +12,7 @@ import (
 func (p *parser) ToSignals(b []byte) (*model.Signals, error) {
 	s := model.NewSignals()
 	if len(b) != int(model.NumTotalBytes) {
-		return nil, fmt.Errorf(
-			"the arg b's len must be %d, the actual len was %d", 
-			model.NumTotalBytes, len(b))
+		return nil, NewInvalidLenError(int(model.NumTotalBytes), len(b))
 	}
 	err := sumCheck(b)
 	if err != nil {
@@ -47,14 +45,14 @@ func sumCheck(b []byte) error {
 		var ad uint16
 		err := binary.Read(buf, binary.LittleEndian, &ad)
 		if err != nil {
-			return fmt.Errorf("err: %w", err)
+			return fmt.Errorf("failed to read AD value in Little Endian order: %w", err)
 		}
 		actual += ad
 	}
 	var expected uint16
 	err := binary.Read(bytes.NewBuffer(b[1600:1602]), binary.LittleEndian, &expected)
 	if err != nil {
-		return fmt.Errorf("err: %w", err)
+		return fmt.Errorf("failed to read AD value in Little Endian order: %w", err)
 	}
 	if actual != expected {
 		return &FailureSumCheckError{Expected: expected, Actual: actual}
@@ -69,4 +67,21 @@ type FailureSumCheckError struct {
 
 func (e *FailureSumCheckError) Error() string {
 	return fmt.Sprintf("parsed invalid signals doesn't match with the sum-check-code: expected %d but actual %d", e.Expected, e.Actual)
+}
+
+func NewFailureSumCheckError(expected uint16, actual uint16) *FailureSumCheckError {
+	return &FailureSumCheckError{Expected: expected, Actual: actual}
+}
+
+type InvalidLenError struct {
+	Expected int
+	Actual   int
+}
+
+func (e *InvalidLenError) Error() string {
+	return fmt.Sprintf("the arg b's len must be %d, the actual len was %d", e.Expected, e.Actual)
+}
+
+func NewInvalidLenError(expected int, actual int) *InvalidLenError {
+	return &InvalidLenError{Expected: expected, Actual: actual}
 }

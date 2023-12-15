@@ -66,6 +66,14 @@ func (a *binAdapter) WriteRawSignal(ctx context.Context, stg *model.Setting) (er
 		default:
 			signals, err := a.receiveAD()
 			if err != nil {
+				// 再送制御をする
+				var targetErr *acceptableError
+				if errors.As(err, &targetErr) {
+					if err := a.sendNAK(); err != nil {
+						return fmt.Errorf("%s, and failed to send NAK to the server", err.Error())
+					}
+					continue
+				} 
 				return fmt.Errorf("failed to receive AD values: %w", err)
 			}
 			if err = signals.SetMeasurements(stg.Calibration, stg.AnalysisType); err != nil {
@@ -87,6 +95,16 @@ func (a *binAdapter) WriteRawSignal(ctx context.Context, stg *model.Setting) (er
 	}
 }
 
+type acceptableError struct {
+	originalErr error
+}
+func (e *acceptableError) Error() string {
+	return e.Error()
+}
+func newAcceptableError(err error) *acceptableError {
+	return &acceptableError{originalErr: err}
+}
+
 func (a *binAdapter) receiveAD() (*model.Signals, error) {
 	rawBytes := make([]byte, model.NumTotalBytes)
 	n, err := a.Conn.Read(rawBytes)
@@ -96,13 +114,14 @@ func (a *binAdapter) receiveAD() (*model.Signals, error) {
 	if n == 0 {
 		return nil, errors.New("received 0 byte")
 	}
+	fmt.Printf("received %d bytes\n", n)
 
 	s, err := a.Parser.ToSignals(rawBytes[:n])
 	if err != nil {
 		if _, ok := err.(*parser.FailureSumCheckError); ok {
-			if err := a.sendNAK(); err != nil {
-				return nil, fmt.Errorf("%s, and failed to send NAK to the server", err.Error())
-			}
+			return nil, newAcceptableError(err)
+		} else if _, ok := err.(*parser.InvalidLenError); ok {
+			return nil, newAcceptableError(err)
 		} else {
 			return nil, fmt.Errorf("failed to parse binary data to Signals: %w", err)
 		}
