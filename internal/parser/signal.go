@@ -55,7 +55,7 @@ func sumCheck(b []byte) error {
 		return fmt.Errorf("failed to read AD value in Little Endian order: %w", err)
 	}
 	if actual != expected {
-		return &FailureSumCheckError{Expected: expected, Actual: actual}
+		return NewFailureSumCheckError(expected, actual)
 	}
 	return nil
 }

@@ -23,7 +23,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	time.Sleep(time.Second * 15)
+	time.Sleep(time.Second * 5)
 	err = c.Stop()
 	if err != nil {
 		panic(err)
