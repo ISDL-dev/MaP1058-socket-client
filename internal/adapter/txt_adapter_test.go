@@ -269,7 +269,8 @@ func TestGetTrendData(t *testing.T) {
 		wg := CSVWriterGroup{}
 
 		txtAdapter := NewTxtAdapter(conn, scanner, parser)
-		err := txtAdapter.WriteTrendData(context.Background(), wg, model.AnalysisType{5, 4, 4, 4, 4, 3, 11, 9})
+		var rcvSuccess chan bool
+		err := txtAdapter.WriteTrendData(context.Background(), rcvSuccess, wg, model.AnalysisType{5, 4, 4, 4, 4, 3, 11, 9})
 		assert.NoError(t, err)
 	})
 }

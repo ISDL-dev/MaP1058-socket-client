@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Be3751/MaP1058-socket-client/internal/utils/net"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/Be3751/MaP1058-socket-client/internal/adapter"
@@ -25,8 +26,6 @@ type client struct {
 	bin    adapter.BinAdapter
 	txt    adapter.TxtAdapter
 	raw    *os.File
-	ctx    context.Context
-	cancel context.CancelFunc
 	config Config
 }
 
@@ -80,7 +79,6 @@ func NewClient(c Config) (Client, error) {
 	ps := parser.NewParser()
 	binAdapter := adapter.NewBinAdapter(binAdConn, ps, sgFile)
 
-	ctx, cancel := context.WithCancel(context.Background())
 	sc := scanner.NewCustomScanner(txtAdConn)
 	txtAdapter := adapter.NewTxtAdapter(txtAdConn, sc, ps)
 
@@ -88,14 +86,13 @@ func NewClient(c Config) (Client, error) {
 		binAdapter,
 		txtAdapter,
 		sgFile,
-		ctx,
-		cancel,
 		c,
 	}, nil
 }
 
 func (c *client) Start(rec time.Duration) error {
-	err := c.txt.StartRec(rec, time.Now())
+	var err error
+	err = c.txt.StartRec(rec, time.Now())
 	if err != nil {
 		panic(err)
 	}
@@ -112,40 +109,31 @@ func (c *client) Start(rec time.Duration) error {
 	}
 	// TODO: write setting to file
 
-	var bErrChan chan error
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// via rcvSuccess, the goroutine for trend data tells the other whether it successfully receives data.
+	var rcvSuccess chan bool
+	var wg sync.WaitGroup
 	go func() {
-		err := c.bin.WriteRawSignal(c.ctx, setting)
-		if err != nil {
-			bErrChan <- fmt.Errorf("failed to write raw signal: %w", err)
+		defer wg.Done()
+		wg.Add(1)
+		if bErr := c.bin.WriteRawSignal(ctx, rcvSuccess, setting); bErr != nil {
+			err = fmt.Errorf("failed to write raw signal: %w", bErr)
+			cancel()
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		wg.Add(1)
+		if tErr := c.txt.WriteTrendData(ctx, rcvSuccess, adapter.CSVWriterGroup{}, setting.AnalysisType); tErr != nil {
+			err = fmt.Errorf("failed to write trend data: %w", tErr)
+			cancel()
 		}
 	}()
 
-	var tErrChan chan error
-	go func() {
-		err = c.txt.WriteTrendData(c.ctx, adapter.CSVWriterGroup{}, setting.AnalysisType)
-		if err != nil {
-			tErrChan <- fmt.Errorf("failed to write trend data: %w", err)
-		}
-	}()
-
-	for i := 0; i < 2; i++ {
-		select {
-		case err := <-bErrChan:
-			if err != nil {
-				return err
-			}
-			if err = c.raw.Close(); err != nil {
-				return fmt.Errorf("failed to close raw file: %w", err)
-			}
-		case err := <-tErrChan:
-			if err != nil {
-				return err
-			}
-			c.cancel()
-		}
-	}
-
-	return nil
+	wg.Wait()
+	return err
 }
 
 func (c *client) Stop() error {

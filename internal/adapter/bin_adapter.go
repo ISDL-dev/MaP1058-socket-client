@@ -13,7 +13,7 @@ import (
 
 type BinAdapter interface {
 	// WriteRawSignal AD値を受信する
-	WriteRawSignal(ctx context.Context, stg *model.Setting) error
+	WriteRawSignal(ctx context.Context, rcvSuccess <-chan bool, stg *model.Setting) error
 }
 
 func NewBinAdapter(c socket.Conn, p parser.Parser, w io.ReadWriteSeeker) BinAdapter {
@@ -34,7 +34,7 @@ const (
 	bufferSize = 10
 )
 
-func (a *binAdapter) WriteRawSignal(ctx context.Context, stg *model.Setting) (err error) {
+func (a *binAdapter) WriteRawSignal(ctx context.Context, rcvSuccess <-chan bool, stg *model.Setting) (err error) {
 	defer func() {
 		err := a.Conn.Close()
 		if err != nil {
@@ -58,11 +58,17 @@ func (a *binAdapter) WriteRawSignal(ctx context.Context, stg *model.Setting) (er
 	var timeReceived int
 	for {
 		select {
-		case <-ctx.Done():
+		case <-rcvSuccess: // the receiving process is complete.
+			// TODO: debug
 			if err = a.signalsToRight(*csvWriter); err != nil {
 				return fmt.Errorf("failed to rearrange signals in CSV to the right order: %w", err)
 			}
-			return nil
+			if err := a.Conn.Close(); err != nil {
+				return fmt.Errorf("failed to close connection: %w", err)
+			}
+			break
+		case <-ctx.Done():
+			break
 		default:
 			signals, err := a.receiveAD()
 			if err != nil {
@@ -92,6 +98,7 @@ func (a *binAdapter) WriteRawSignal(ctx context.Context, stg *model.Setting) (er
 			}
 		}
 	}
+	return nil
 }
 
 func (a *binAdapter) receiveAD() (*model.Signals, error) {

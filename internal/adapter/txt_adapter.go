@@ -3,7 +3,6 @@ package adapter
 import (
 	"context"
 	"encoding/csv"
-	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -21,7 +20,7 @@ type TxtAdapter interface {
 	StartRec(recTime time.Duration, recDateTime time.Time) error
 	EndRec() error
 	GetStatus() (model.Status, error)
-	WriteTrendData(ctx context.Context, w CSVWriterGroup, at model.AnalysisType) error
+	WriteTrendData(ctx context.Context, rcvSuccess chan<- bool, w CSVWriterGroup, at model.AnalysisType) error
 	GetSetting() (*model.Setting, error)
 }
 
@@ -167,7 +166,7 @@ type CSVWriterGroup struct {
 	RespWriter  io.Writer
 }
 
-func (a *txtAdapter) WriteTrendData(ctx context.Context, w CSVWriterGroup, at model.AnalysisType) error {
+func (a *txtAdapter) WriteTrendData(ctx context.Context, rcvSuccess chan<- bool, w CSVWriterGroup, at model.AnalysisType) error {
 	defer func() {
 		err := a.Conn.Close()
 		if err != nil {
@@ -186,7 +185,7 @@ func (a *txtAdapter) WriteTrendData(ctx context.Context, w CSVWriterGroup, at mo
 	for a.Scanner.Scan() {
 		select {
 		case <-ctx.Done():
-			return errors.New("forced to stop writing trend data")
+			break
 		default:
 			cmdStr := a.Scanner.Text()
 			cmd, err := a.Parser.ToCommand(cmdStr)
@@ -229,7 +228,11 @@ func (a *txtAdapter) WriteTrendData(ctx context.Context, w CSVWriterGroup, at mo
 				continue
 			case "GUIDANCE":
 				continue
-			case "END":
+			case "END": // the receiving process is complete.
+				rcvSuccess <- true
+				if err := a.Conn.Close(); err != nil {
+					return fmt.Errorf("failed to close connection: %w", err)
+				}
 				break
 			default:
 				return fmt.Errorf("invalid command: %s", cmdStr)
