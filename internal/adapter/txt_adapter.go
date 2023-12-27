@@ -182,10 +182,11 @@ func (a *txtAdapter) WriteTrendData(ctx context.Context, rcvSuccess chan<- bool,
 		return fmt.Errorf("failed to write AnalyzedEEG header to csv: %w", err)
 	}
 
+loop:
 	for a.Scanner.Scan() {
 		select {
 		case <-ctx.Done():
-			break
+			break loop
 		default:
 			cmdStr := a.Scanner.Text()
 			cmd, err := a.Parser.ToCommand(cmdStr)
@@ -233,7 +234,7 @@ func (a *txtAdapter) WriteTrendData(ctx context.Context, rcvSuccess chan<- bool,
 				if err := a.Conn.Close(); err != nil {
 					return fmt.Errorf("failed to close connection: %w", err)
 				}
-				break
+				break loop
 			default:
 				return fmt.Errorf("invalid command: %s", cmdStr)
 			}

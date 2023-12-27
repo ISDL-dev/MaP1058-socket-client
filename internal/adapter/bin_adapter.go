@@ -56,6 +56,7 @@ func (a *binAdapter) WriteRawSignal(ctx context.Context, rcvSuccess <-chan bool,
 
 	buf := make([][]string, bufferSize)
 	var timeReceived int
+loop:
 	for {
 		select {
 		case <-rcvSuccess: // the receiving process is complete.
@@ -66,9 +67,9 @@ func (a *binAdapter) WriteRawSignal(ctx context.Context, rcvSuccess <-chan bool,
 			if err := a.Conn.Close(); err != nil {
 				return fmt.Errorf("failed to close connection: %w", err)
 			}
-			break
+			break loop
 		case <-ctx.Done():
-			break
+			break loop
 		default:
 			signals, err := a.receiveAD()
 			if err != nil {
