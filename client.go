@@ -2,7 +2,9 @@ package MaP1058_socket_client
 
 import (
 	"context"
+	"encoding/csv"
 	"fmt"
+	"github.com/Be3751/MaP1058-socket-client/internal/model"
 	"github.com/Be3751/MaP1058-socket-client/internal/utils/net"
 	"os"
 	"sync"
@@ -107,7 +109,9 @@ func (c *client) Start(rec time.Duration) error {
 	if err != nil {
 		return fmt.Errorf("failed to get setting: %w", err)
 	}
-	// TODO: write setting to file
+	if err := WriteSetting(setting, c.config.SaveDir); err != nil {
+		return fmt.Errorf("failed to write setting: %w", err)
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -139,6 +143,26 @@ func (c *client) Start(rec time.Duration) error {
 func (c *client) Stop() error {
 	if err := c.txt.EndRec(); err != nil {
 		return fmt.Errorf("failed to end recording: %w", err)
+	}
+	return nil
+}
+
+func WriteSetting(stg *model.Setting, dir string) error {
+	stgFilePath := fmt.Sprintf("%s/setting_%s.csv", dir, time.Now().Format("20060102150405"))
+	stgFile, err := os.Create(stgFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to create setting file: %w", err)
+	}
+	defer stgFile.Close()
+
+	stgWriter := csv.NewWriter(stgFile)
+	defer stgWriter.Flush()
+
+	if err := stgWriter.Write(stg.ToCSVHeader()); err != nil {
+		return fmt.Errorf("failed to write setting header: %w", err)
+	}
+	if err := stgWriter.WriteAll(stg.ToCSVRows()); err != nil {
+		return fmt.Errorf("failed to write setting: %w", err)
 	}
 	return nil
 }
