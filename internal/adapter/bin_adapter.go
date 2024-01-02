@@ -65,9 +65,13 @@ func (a *binAdapter) WriteRawSignal(ctx context.Context, stg *model.Setting) (er
 				return err
 			}
 			timeReceived++
+
+			// write records to csv when buffer is full
 			if timeReceived == bufferSize {
-				if err = a.writeRecords(csvWriter, buf); err != nil {
-					return fmt.Errorf("failed to write raw signal records to csv: %w", err)
+				for _, record := range buf {
+					if err = csvWriter.Write(record); err != nil {
+						return fmt.Errorf("failed to write raw signal records to csv: %w", err)
+					}
 				}
 				buf = make([][]string, bufferSize)
 				timeReceived = 0
@@ -87,7 +91,8 @@ func (a *binAdapter) receiveAD() (*model.Signals, error) {
 	}
 
 	s, err := a.Parser.ToSignals(rawBytes[:n])
-	if _, ok := err.(*parser.FailureSumCheckError); ok {
+	var targetErr *parser.FailureSumCheckError
+	if errors.As(err, &targetErr) {
 		if err := a.sendNAK(); err != nil {
 			return nil, fmt.Errorf("%s, and failed to send NAK to the server", err.Error())
 		}
@@ -109,14 +114,6 @@ func (a *binAdapter) sendNAK() error {
 	_, err := a.Conn.Write([]byte{0x15})
 	if err != nil {
 		return fmt.Errorf("failed to write connection NAK: %w", err)
-	}
-	return nil
-}
-
-func (a *binAdapter) writeRecords(w *csv.Writer, records [][]string) error {
-	err := w.WriteAll(records)
-	if err != nil {
-		return fmt.Errorf("failed to write records to csv: %w", err)
 	}
 	return nil
 }
