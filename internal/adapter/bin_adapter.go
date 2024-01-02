@@ -60,10 +60,6 @@ loop:
 	for {
 		select {
 		case <-rcvSuccess: // the receiving process is complete.
-			// TODO: debug
-			if err = a.signalsToRight(*csvWriter); err != nil {
-				return fmt.Errorf("failed to rearrange signals in CSV to the right order: %w", err)
-			}
 			if err := a.Conn.Close(); err != nil {
 				return fmt.Errorf("failed to close connection: %w", err)
 			}
@@ -90,9 +86,13 @@ loop:
 				return err
 			}
 			timeReceived++
+
+			// write records to csv when buffer is full
 			if timeReceived == bufferSize {
-				if err = a.writeRecords(csvWriter, buf); err != nil {
-					return fmt.Errorf("failed to write raw signal records to csv: %w", err)
+				for _, record := range buf {
+					if err = csvWriter.Write(record); err != nil {
+						return fmt.Errorf("failed to write raw signal records to csv: %w", err)
+					}
 				}
 				buf = make([][]string, bufferSize)
 				timeReceived = 0
@@ -140,45 +140,4 @@ func (a *binAdapter) sendNAK() error {
 		return fmt.Errorf("failed to write connection NAK: %w", err)
 	}
 	return nil
-}
-
-func (a *binAdapter) writeRecords(w *csv.Writer, records [][]string) error {
-	err := w.WriteAll(records)
-	if err != nil {
-		return fmt.Errorf("failed to write records to csv: %w", err)
-	}
-	return nil
-}
-
-func (a *binAdapter) signalsToRight(csvWriter csv.Writer) error {
-	csvReader := csv.NewReader(a.File)
-	all, err := csvReader.ReadAll()
-	if err != nil {
-		return fmt.Errorf("failed to read all csv records: %w", err)
-	}
-	if _, err = a.File.Seek(0, io.SeekStart); err != nil {
-		return fmt.Errorf("failed to seek file: %w", err)
-	}
-	if err := csvWriter.WriteAll(transpose(all)); err != nil {
-		return fmt.Errorf("failed to write transposed csv records: %w", err)
-	}
-	return nil
-}
-
-func transpose(matrix [][]string) [][]string {
-	rows := len(matrix)
-	cols := len(matrix[0])
-
-	result := make([][]string, cols)
-	for i := range result {
-		result[i] = make([]string, rows)
-	}
-
-	for i, row := range matrix {
-		for j, val := range row {
-			result[j][i] = val
-		}
-	}
-
-	return result
 }
