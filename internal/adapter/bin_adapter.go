@@ -51,9 +51,6 @@ func (a *binAdapter) WriteRawSignal(ctx context.Context, stg *model.Setting) (er
 	for {
 		select {
 		case <-ctx.Done():
-			if err = a.signalsToRight(*csvWriter); err != nil {
-				return fmt.Errorf("failed to rearrange signals in CSV to the right order: %w", err)
-			}
 			return nil
 		default:
 			signals, err := a.receiveAD()
@@ -68,9 +65,13 @@ func (a *binAdapter) WriteRawSignal(ctx context.Context, stg *model.Setting) (er
 				return err
 			}
 			timeReceived++
+
+			// write records to csv when buffer is full
 			if timeReceived == bufferSize {
-				if err = a.writeRecords(csvWriter, buf); err != nil {
-					return fmt.Errorf("failed to write raw signal records to csv: %w", err)
+				for _, record := range buf {
+					if err = csvWriter.Write(record); err != nil {
+						return fmt.Errorf("failed to write raw signal records to csv: %w", err)
+					}
 				}
 				buf = make([][]string, bufferSize)
 				timeReceived = 0
@@ -90,7 +91,8 @@ func (a *binAdapter) receiveAD() (*model.Signals, error) {
 	}
 
 	s, err := a.Parser.ToSignals(rawBytes[:n])
-	if _, ok := err.(*parser.FailureSumCheckError); ok {
+	var targetErr *parser.FailureSumCheckError
+	if errors.As(err, &targetErr) {
 		if err := a.sendNAK(); err != nil {
 			return nil, fmt.Errorf("%s, and failed to send NAK to the server", err.Error())
 		}
@@ -114,45 +116,4 @@ func (a *binAdapter) sendNAK() error {
 		return fmt.Errorf("failed to write connection NAK: %w", err)
 	}
 	return nil
-}
-
-func (a *binAdapter) writeRecords(w *csv.Writer, records [][]string) error {
-	err := w.WriteAll(records)
-	if err != nil {
-		return fmt.Errorf("failed to write records to csv: %w", err)
-	}
-	return nil
-}
-
-func (a *binAdapter) signalsToRight(csvWriter csv.Writer) error {
-	csvReader := csv.NewReader(a.File)
-	all, err := csvReader.ReadAll()
-	if err != nil {
-		return fmt.Errorf("failed to read all csv records: %w", err)
-	}
-	if _, err = a.File.Seek(0, io.SeekStart); err != nil {
-		return fmt.Errorf("failed to seek file: %w", err)
-	}
-	if err := csvWriter.WriteAll(transpose(all)); err != nil {
-		return fmt.Errorf("failed to write transposed csv records: %w", err)
-	}
-	return nil
-}
-
-func transpose(matrix [][]string) [][]string {
-	rows := len(matrix)
-	cols := len(matrix[0])
-
-	result := make([][]string, cols)
-	for i := range result {
-		result[i] = make([]string, rows)
-	}
-
-	for i, row := range matrix {
-		for j, val := range row {
-			result[j][i] = val
-		}
-	}
-
-	return result
 }
