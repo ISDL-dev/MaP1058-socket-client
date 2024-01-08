@@ -55,7 +55,7 @@ func (a *binAdapter) WriteRawSignal(ctx context.Context, rcvSuccess <-chan bool,
 		return fmt.Errorf("failed to write header to csv: %w", err)
 	}
 
-	buf := make([][]string, bufferSize)
+	var buf [][]string
 	var timeReceived int
 LOOP:
 	for {
@@ -86,14 +86,13 @@ LOOP:
 			timeReceived++
 
 			// write records to csv when buffer is full
-			if timeReceived == bufferSize {
+			if timeReceived%bufferSize == 0 {
 				for _, record := range buf {
 					if err = csvWriter.Write(record); err != nil {
 						return fmt.Errorf("failed to write raw signal records to csv: %w", err)
 					}
 				}
-				buf = make([][]string, bufferSize)
-				timeReceived = 0
+				buf = [][]string{}
 			}
 		}
 		// prevent busy loop
