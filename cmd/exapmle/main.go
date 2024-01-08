@@ -11,7 +11,7 @@ const (
 
 func main() {
 	conf := client.Config{
-		ServerIP: "192.168.10.101",
+		ServerIP: "192.168.10.128",
 		SaveDir:  outputDir,
 	}
 
@@ -19,12 +19,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	err = c.Start(time.Second * 10)
-	if err != nil {
-		panic(err)
-	}
-	time.Sleep(time.Second * 5)
-	err = c.Stop()
+	err = c.Start(time.Second * 3)
 	if err != nil {
 		panic(err)
 	}

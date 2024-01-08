@@ -44,8 +44,7 @@ type Config struct {
 func NewClient(c Config) (Client, error) {
 	clientIP, err := net.GetMyLocalIP()
 	if err != nil {
-		fmt.Println(err)
-		panic(err)
+		return nil, fmt.Errorf("failed to get the client IP address: %w", err)
 	}
 
 	// make TCP/IP connection for binary data and text data
@@ -57,7 +56,7 @@ func NewClient(c Config) (Client, error) {
 	}
 	binAdConn, err := socket.Connect(binAdConf)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("failed to make a TCP connection for raw wave: %w", err)
 	}
 
 	txtAdConf := socket.SocketConfig{
@@ -68,14 +67,14 @@ func NewClient(c Config) (Client, error) {
 	}
 	txtAdConn, err := socket.Connect(txtAdConf)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("failed to make a TCP connection for trend data: %w", err)
 	}
 
 	// make file for saving raw signal
 	sgFilePath := fmt.Sprintf("%s/rawwave_%s.csv", c.SaveDir, time.Now().Format("20060102150405"))
 	sgFile, err := os.Create(sgFilePath)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("failed to create a file of experiment setting: %w", err)
 	}
 
 	ps := parser.NewParser()
@@ -96,14 +95,8 @@ func (c *client) Start(rec time.Duration) error {
 	var err error
 	err = c.txt.StartRec(rec, time.Now())
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("failed to start recording: %w", err)
 	}
-	defer func() {
-		err = c.txt.EndRec()
-		if err != nil {
-			panic(err)
-		}
-	}()
 
 	setting, err := c.txt.GetSetting()
 	if err != nil {
@@ -113,29 +106,33 @@ func (c *client) Start(rec time.Duration) error {
 		return fmt.Errorf("failed to write setting: %w", err)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
+	//ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), rec)
 	defer cancel()
 
 	// via rcvSuccess, the goroutine for trend data tells the other whether it successfully receives data.
-	var rcvSuccess chan bool
+	rcvSuccess := make(chan bool, 1)
 	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		wg.Add(1)
 		if bErr := c.bin.WriteRawSignal(ctx, rcvSuccess, setting); bErr != nil {
 			err = fmt.Errorf("failed to write raw signal: %w", bErr)
 			cancel()
 		}
+		fmt.Println("finish WriteRawSignal")
 	}()
+	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		wg.Add(1)
 		if tErr := c.txt.WriteTrendData(ctx, rcvSuccess, adapter.CSVWriterGroup{}, setting.AnalysisType); tErr != nil {
 			err = fmt.Errorf("failed to write trend data: %w", tErr)
 			cancel()
 		}
+		fmt.Println("finish WriteTrendData")
 	}()
 
+	fmt.Println("Now receiving...")
 	wg.Wait()
 	return err
 }

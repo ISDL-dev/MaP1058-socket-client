@@ -9,6 +9,7 @@ import (
 	"github.com/Be3751/MaP1058-socket-client/internal/parser"
 	"github.com/Be3751/MaP1058-socket-client/internal/socket"
 	"io"
+	"time"
 )
 
 type BinAdapter interface {
@@ -56,16 +57,13 @@ func (a *binAdapter) WriteRawSignal(ctx context.Context, rcvSuccess <-chan bool,
 
 	buf := make([][]string, bufferSize)
 	var timeReceived int
-loop:
+LOOP:
 	for {
 		select {
 		case <-rcvSuccess: // the receiving process is complete.
-			if err := a.Conn.Close(); err != nil {
-				return fmt.Errorf("failed to close connection: %w", err)
-			}
-			break loop
+			break LOOP
 		case <-ctx.Done():
-			break loop
+			break LOOP
 		default:
 			signals, err := a.receiveAD()
 			if err != nil {
@@ -98,6 +96,8 @@ loop:
 				timeReceived = 0
 			}
 		}
+		// prevent busy loop
+		time.Sleep(time.Millisecond * 10)
 	}
 	return nil
 }

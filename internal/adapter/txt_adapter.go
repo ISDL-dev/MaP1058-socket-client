@@ -177,16 +177,16 @@ func (a *txtAdapter) WriteTrendData(ctx context.Context, rcvSuccess chan<- bool,
 
 	var analyzedEEG model.AnalyzedEEG
 
-	err := w.EEGWriter.Write(analyzedEEG.ToCSVHeader(at))
-	if err != nil {
-		return fmt.Errorf("failed to write AnalyzedEEG header to csv: %w", err)
-	}
+	//err := w.EEGWriter.Write(analyzedEEG.ToCSVHeader(at))
+	//if err != nil {
+	//	return fmt.Errorf("failed to write AnalyzedEEG header to csv: %w", err)
+	//}
 
-loop:
+LOOP:
 	for a.Scanner.Scan() {
 		select {
 		case <-ctx.Done():
-			break loop
+			break LOOP
 		default:
 			cmdStr := a.Scanner.Text()
 			cmd, err := a.Parser.ToCommand(cmdStr)
@@ -211,12 +211,14 @@ loop:
 			case "DATA_RESP2DP":
 				continue
 			case "DATA_EEG":
+				continue
 				power, err := a.Parser.ToChannelPower(cmd)
 				if err != nil {
 					return fmt.Errorf("failed to convert %s to AnalyzedEEG: %w", cmdStr, err)
 				}
 				analyzedEEG[power.ChNum][power.BandNum] = power
 			case "EVENT_SEC":
+				continue
 				err := w.EEGWriter.Write(analyzedEEG.ToCSVRow())
 				if err != nil {
 					return fmt.Errorf("failed to write AnalyzedEEG to csv: %w", err)
@@ -230,11 +232,8 @@ loop:
 			case "GUIDANCE":
 				continue
 			case "END": // the receiving process is complete.
-				rcvSuccess <- true
-				if err := a.Conn.Close(); err != nil {
-					return fmt.Errorf("failed to close connection: %w", err)
-				}
-				break loop
+				close(rcvSuccess)
+				break LOOP
 			default:
 				return fmt.Errorf("invalid command: %s", cmdStr)
 			}
