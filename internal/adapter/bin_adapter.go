@@ -102,23 +102,13 @@ LOOP:
 }
 
 func (a *binAdapter) receiveAD() (*model.Signals, error) {
-	rawBytes := make([]byte, model.NumTotalBytes)
-	n, err := a.Conn.Read(rawBytes)
+	var rawBytes []byte
+	rawBytes, err := a.read(rawBytes)
 	if err != nil {
-		return nil, fmt.Errorf("failed to receive binary data: %w", err)
-	}
-	if n == 0 {
-		return nil, errors.New("received 0 byte")
-	} else if n < model.NumTotalBytes {
-		leftRawBytes := make([]byte, model.NumTotalBytes-n)
-		n, err = a.Conn.Read(leftRawBytes)
-		if err != nil {
-			return nil, fmt.Errorf("failed to receive binary data: %w", err)
-		}
-		rawBytes = append(rawBytes[:n], leftRawBytes...)
+		return nil, fmt.Errorf("failed to read binary data: %w", err)
 	}
 
-	s, err := a.Parser.ToSignals(rawBytes[:n])
+	s, err := a.Parser.ToSignals(rawBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse binary data to Signals: %w", err)
 	}
@@ -139,4 +129,22 @@ func (a *binAdapter) sendNAK() error {
 		return fmt.Errorf("failed to write connection NAK: %w", err)
 	}
 	return nil
+}
+
+// 再帰的にmodel.NumTotalBytesのバイト数になるまで受信する
+func (a *binAdapter) read(rawBytes []byte) ([]byte, error) {
+	b := make([]byte, model.NumTotalBytes)
+	n, err := a.Conn.Read(b)
+	if err != nil {
+		return nil, fmt.Errorf("failed to receive binary data: %w", err)
+	}
+	if n == 0 {
+		return nil, errors.New("tried receiving but got 0 byte")
+	}
+	rawBytes = append(rawBytes, b[:n]...)
+	if len(rawBytes) == model.NumTotalBytes {
+		return rawBytes, nil
+	} else {
+		return a.read(rawBytes)
+	}
 }
