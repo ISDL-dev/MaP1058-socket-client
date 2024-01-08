@@ -3,7 +3,6 @@ package adapter
 import (
 	"context"
 	"encoding/csv"
-	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -21,7 +20,7 @@ type TxtAdapter interface {
 	StartRec(recTime time.Duration, recDateTime time.Time) error
 	EndRec() error
 	GetStatus() (model.Status, error)
-	WriteTrendData(ctx context.Context, w CSVWriterGroup, at model.AnalysisType) error
+	WriteTrendData(ctx context.Context, rcvSuccess chan<- bool, w CSVWriterGroup, at model.AnalysisType) error
 	GetSetting() (*model.Setting, error)
 }
 
@@ -167,18 +166,27 @@ type CSVWriterGroup struct {
 	RespWriter  io.Writer
 }
 
-func (a *txtAdapter) WriteTrendData(ctx context.Context, w CSVWriterGroup, at model.AnalysisType) error {
+func (a *txtAdapter) WriteTrendData(ctx context.Context, rcvSuccess chan<- bool, w CSVWriterGroup, at model.AnalysisType) error {
+	defer func() {
+		err := a.Conn.Close()
+		if err != nil {
+			err = fmt.Errorf("failed to close connection: %w", err)
+			panic(err)
+		}
+	}()
+
 	var analyzedEEG model.AnalyzedEEG
 
-	err := w.EEGWriter.Write(analyzedEEG.ToCSVHeader(at))
-	if err != nil {
-		return fmt.Errorf("failed to write AnalyzedEEG header to csv: %w", err)
-	}
+	//err := w.EEGWriter.Write(analyzedEEG.ToCSVHeader(at))
+	//if err != nil {
+	//	return fmt.Errorf("failed to write AnalyzedEEG header to csv: %w", err)
+	//}
 
+LOOP:
 	for a.Scanner.Scan() {
 		select {
 		case <-ctx.Done():
-			return errors.New("forced to stop writing trend data")
+			break LOOP
 		default:
 			cmdStr := a.Scanner.Text()
 			cmd, err := a.Parser.ToCommand(cmdStr)
@@ -203,12 +211,14 @@ func (a *txtAdapter) WriteTrendData(ctx context.Context, w CSVWriterGroup, at mo
 			case "DATA_RESP2DP":
 				continue
 			case "DATA_EEG":
+				continue
 				power, err := a.Parser.ToChannelPower(cmd)
 				if err != nil {
 					return fmt.Errorf("failed to convert %s to AnalyzedEEG: %w", cmdStr, err)
 				}
 				analyzedEEG[power.ChNum][power.BandNum] = power
 			case "EVENT_SEC":
+				continue
 				err := w.EEGWriter.Write(analyzedEEG.ToCSVRow())
 				if err != nil {
 					return fmt.Errorf("failed to write AnalyzedEEG to csv: %w", err)
@@ -221,8 +231,9 @@ func (a *txtAdapter) WriteTrendData(ctx context.Context, w CSVWriterGroup, at mo
 				continue
 			case "GUIDANCE":
 				continue
-			case "END":
-				break
+			case "END": // the receiving process is complete.
+				close(rcvSuccess)
+				break LOOP
 			default:
 				return fmt.Errorf("invalid command: %s", cmdStr)
 			}

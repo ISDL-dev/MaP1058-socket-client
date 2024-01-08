@@ -30,7 +30,8 @@ func TestReceiveADValues(t *testing.T) {
 			return 1, nil
 		})
 
-		err := binAdapter.WriteRawSignal(ctx, nil)
+		var rcvSuccess chan bool
+		err := binAdapter.WriteRawSignal(ctx, rcvSuccess, nil)
 		assert.NoError(t, err)
 	})
 
@@ -54,7 +55,8 @@ func TestReceiveADValues(t *testing.T) {
 			return 1, nil
 		})
 
-		err := binAdapter.WriteRawSignal(ctx, nil)
+		var rcvSuccess chan bool
+		err := binAdapter.WriteRawSignal(ctx, rcvSuccess, nil)
 		assert.NoError(t, err)
 	})
 }

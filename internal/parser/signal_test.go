@@ -56,6 +56,6 @@ func TestToSignals(t *testing.T) {
 		rawBytes[sumBytes-2] = 0x00
 		rawBytes[sumBytes-1] = 0x00
 		_, err := parser.ToSignals(rawBytes)
-		assert.EqualValues(t, &FailureSumCheckError{Expected: 80, Actual: 160}, err)
+		assert.EqualValues(t, NewFailureSumCheckError(80, 160), err)
 	})
 }

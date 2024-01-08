@@ -21,7 +21,6 @@ func (p *parser) ToCommand(s string) (model.Command, error) {
 		nameAndParams := strings.Split(s, ":A:")
 		name := nameAndParams[0]
 		paramsStr := nameAndParams[1]
-		fmt.Println(paramsStr)
 		var params [model.NumSeparator + 1]string
 		var calStr string
 		re := regexp.MustCompile(`"(.*)"`)

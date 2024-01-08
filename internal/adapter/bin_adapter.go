@@ -9,11 +9,12 @@ import (
 	"github.com/Be3751/MaP1058-socket-client/internal/parser"
 	"github.com/Be3751/MaP1058-socket-client/internal/socket"
 	"io"
+	"time"
 )
 
 type BinAdapter interface {
 	// WriteRawSignal AD値を受信する
-	WriteRawSignal(ctx context.Context, stg *model.Setting) error
+	WriteRawSignal(ctx context.Context, rcvSuccess <-chan bool, stg *model.Setting) error
 }
 
 func NewBinAdapter(c socket.Conn, p parser.Parser, w io.ReadWriteSeeker) BinAdapter {
@@ -34,7 +35,15 @@ const (
 	bufferSize = 10
 )
 
-func (a *binAdapter) WriteRawSignal(ctx context.Context, stg *model.Setting) (err error) {
+func (a *binAdapter) WriteRawSignal(ctx context.Context, rcvSuccess <-chan bool, stg *model.Setting) (err error) {
+	defer func() {
+		err := a.Conn.Close()
+		if err != nil {
+			err = fmt.Errorf("failed to close connection: %w", err)
+			panic(err)
+		}
+	}()
+
 	csvWriter := csv.NewWriter(a.File)
 	defer func() {
 		csvWriter.Flush()
@@ -46,15 +55,25 @@ func (a *binAdapter) WriteRawSignal(ctx context.Context, stg *model.Setting) (er
 		return fmt.Errorf("failed to write header to csv: %w", err)
 	}
 
-	buf := make([][]string, bufferSize)
+	var buf [][]string
 	var timeReceived int
+LOOP:
 	for {
 		select {
+		case <-rcvSuccess: // the receiving process is complete.
+			break LOOP
 		case <-ctx.Done():
-			return nil
+			break LOOP
 		default:
 			signals, err := a.receiveAD()
 			if err != nil {
+				var targetErr *parser.FailureSumCheckError
+				if errors.As(err, &targetErr) {
+					if err := a.sendNAK(); err != nil {
+						return fmt.Errorf("%s, and failed to send NAK to the server", err.Error())
+					}
+					continue
+				}
 				return fmt.Errorf("failed to receive AD values: %w", err)
 			}
 			if err = signals.SetMeasurements(stg.Calibration, stg.AnalysisType); err != nil {
@@ -67,36 +86,30 @@ func (a *binAdapter) WriteRawSignal(ctx context.Context, stg *model.Setting) (er
 			timeReceived++
 
 			// write records to csv when buffer is full
-			if timeReceived == bufferSize {
+			if timeReceived%bufferSize == 0 {
 				for _, record := range buf {
 					if err = csvWriter.Write(record); err != nil {
 						return fmt.Errorf("failed to write raw signal records to csv: %w", err)
 					}
 				}
-				buf = make([][]string, bufferSize)
-				timeReceived = 0
+				buf = [][]string{}
 			}
 		}
+		// prevent busy loop
+		time.Sleep(time.Millisecond * 10)
 	}
+	return nil
 }
 
 func (a *binAdapter) receiveAD() (*model.Signals, error) {
-	rawBytes := make([]byte, model.NumTotalBytes)
-	n, err := a.Conn.Read(rawBytes)
+	var rawBytes []byte
+	rawBytes, err := a.read(rawBytes)
 	if err != nil {
-		return nil, fmt.Errorf("failed to receive binary data: %w", err)
-	}
-	if n == 0 {
-		return nil, errors.New("received 0 byte")
+		return nil, fmt.Errorf("failed to read binary data: %w", err)
 	}
 
-	s, err := a.Parser.ToSignals(rawBytes[:n])
-	var targetErr *parser.FailureSumCheckError
-	if errors.As(err, &targetErr) {
-		if err := a.sendNAK(); err != nil {
-			return nil, fmt.Errorf("%s, and failed to send NAK to the server", err.Error())
-		}
-	} else {
+	s, err := a.Parser.ToSignals(rawBytes)
+	if err != nil {
 		return nil, fmt.Errorf("failed to parse binary data to Signals: %w", err)
 	}
 	return s, nil
@@ -116,4 +129,22 @@ func (a *binAdapter) sendNAK() error {
 		return fmt.Errorf("failed to write connection NAK: %w", err)
 	}
 	return nil
+}
+
+// 再帰的にmodel.NumTotalBytesのバイト数になるまで受信する
+func (a *binAdapter) read(rawBytes []byte) ([]byte, error) {
+	b := make([]byte, model.NumTotalBytes)
+	n, err := a.Conn.Read(b)
+	if err != nil {
+		return nil, fmt.Errorf("failed to receive binary data: %w", err)
+	}
+	if n == 0 {
+		return nil, errors.New("tried receiving but got 0 byte")
+	}
+	rawBytes = append(rawBytes, b[:n]...)
+	if len(rawBytes) == model.NumTotalBytes {
+		return rawBytes, nil
+	} else {
+		return a.read(rawBytes)
+	}
 }
