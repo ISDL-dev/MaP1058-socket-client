@@ -15,13 +15,35 @@ import (
 	"github.com/Be3751/MaP1058-socket-client/internal/socket"
 )
 
-// TxtAdapter テキストデータでトレンドデータの受信やコマンドの送受信をする
+// TxtAdapter is an interface to handle text data from MaP1058,
+// such as analysis results and configuration values.
 type TxtAdapter interface {
+	// StartRec sends a command to start recording to the MaP1058 server.
+	// It returns an error if it fails to send the command.
 	StartRec(recTime time.Duration, recDateTime time.Time) error
+
+	// EndRec sends a command to end recording to the MaP1058 server.
+	// It returns an error if it fails to send the command.
 	EndRec() error
+
+	// GetStatus receives the status of the MaP1058 server.
+	// It returns the status and an error if it fails to receive the status.
 	GetStatus() (model.Status, error)
+
+	// WriteTrendData receives trend data from the MaP1058 server and writes it to a csv file.
+	// Trend data is the result of analysis, such as EEG power and heart rate.
+	// It returns an error if it fails to write the data.
 	WriteTrendData(ctx context.Context, rcvSuccess chan<- bool, w CSVWriterGroup, at model.AnalysisType) error
+
+	// GetSetting receives configuration values from the MaP1058 server.
+	// It returns the configuration values and an error if it fails to receive the values.
 	GetSetting() (*model.Setting, error)
+
+	// Pause keeps receiving trend data but does not write it to a csv file.
+	Pause()
+
+	// Resume restarts receiving trend data. It is called after Pause.
+	Resume()
 }
 
 func NewTxtAdapter(c socket.Conn, s scanner.CustomScanner, p parser.Parser) TxtAdapter {
@@ -36,6 +58,7 @@ type txtAdapter struct {
 	Conn    socket.Conn
 	Scanner scanner.CustomScanner
 	Parser  parser.Parser
+	noWrite bool
 }
 
 func (a *txtAdapter) StartRec(recSecond time.Duration, recDateTime time.Time) error {
@@ -193,6 +216,10 @@ LOOP:
 			if err != nil {
 				return fmt.Errorf("failed to convert %s to Command: %w", cmdStr, err)
 			}
+
+			if a.noWrite {
+				continue
+			}
 			switch cmd.Name {
 			case "DATA":
 				continue
@@ -254,4 +281,12 @@ func strSecond(d time.Duration) string {
 		secondStr = strings.Replace(d.String(), "s", "", -1)
 	}
 	return secondStr
+}
+
+func (a *txtAdapter) Pause() {
+	a.noWrite = true
+}
+
+func (a *txtAdapter) Resume() {
+	a.noWrite = false
 }

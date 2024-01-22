@@ -13,11 +13,17 @@ import (
 )
 
 type BinAdapter interface {
-	// WriteRawSignal AD値を受信する
+	// WriteRawSignal receives raw signals and writes them to a csv file.
 	WriteRawSignal(ctx context.Context, rcvSuccess <-chan bool, stg *model.Setting) error
+
+	// Pause keeps receiving signals but does not write them to a csv file.
+	Pause()
+
+	// Resume restarts writing signals to a csv file. It is called after Pause.
+	Resume()
 }
 
-func NewBinAdapter(c socket.Conn, p parser.Parser, w io.ReadWriteSeeker) BinAdapter {
+func NewBinAdapter(c socket.Conn, p parser.Parser, w io.Writer) BinAdapter {
 	return &binAdapter{
 		Conn:   c,
 		Parser: p,
@@ -28,7 +34,9 @@ func NewBinAdapter(c socket.Conn, p parser.Parser, w io.ReadWriteSeeker) BinAdap
 type binAdapter struct {
 	Conn   socket.Conn
 	Parser parser.Parser
-	File   io.ReadWriteSeeker
+	File   io.Writer
+	// noWrite is a flag to prevent writing signals to a csv file. If true, it receives signals but does not write them.
+	noWrite bool
 }
 
 const (
@@ -76,15 +84,19 @@ LOOP:
 				}
 				return fmt.Errorf("failed to receive AD values: %w", err)
 			}
+			if a.noWrite {
+				continue
+			}
+
 			if err = signals.SetMeasurements(stg.Calibration, stg.AnalysisType); err != nil {
 				return fmt.Errorf("failed to set measurements: %w", err)
 			}
+
 			buf = append(buf, signals.ToRecords(timeReceived)...)
 			if err = a.sendACK(); err != nil {
 				return err
 			}
 			timeReceived++
-
 			// write records to csv when buffer is full
 			if timeReceived%bufferSize == 0 {
 				for _, record := range buf {
@@ -99,6 +111,14 @@ LOOP:
 		time.Sleep(time.Millisecond * 10)
 	}
 	return nil
+}
+
+func (a *binAdapter) Pause() {
+	a.noWrite = true
+}
+
+func (a *binAdapter) Resume() {
+	a.noWrite = false
 }
 
 func (a *binAdapter) receiveAD() (*model.Signals, error) {

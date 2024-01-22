@@ -17,10 +17,20 @@ import (
 )
 
 type Client interface {
-	// Start sends a command to start recording and receives some commands
-	// containing signals and measurement conditions.
+	// Start make the connection to the server and starts recording.
+	// It records signals and configuration values for the specified duration.
+	// It returns an error if it fails to start recording or to write signals.
 	Start(rec time.Duration) error
-	// Stop sends a command to stop recording.
+
+	// Pause temporarily stops recording not to write signals, but keeps the connection.
+	Pause()
+
+	// Resume restarts recording to write signals again. It is called after Pause.
+	Resume()
+
+	// Stop ends recording and closes the connection forcibly.
+	// Call this method if you want to stop recording before the specified duration.
+	// It returns an error if it fails to end recording.
 	Stop() error
 }
 
@@ -135,6 +145,16 @@ func (c *client) Start(rec time.Duration) error {
 	fmt.Println("Now receiving...")
 	wg.Wait()
 	return err
+}
+
+func (c *client) Pause() {
+	c.bin.Pause()
+	c.txt.Pause()
+}
+
+func (c *client) Resume() {
+	c.bin.Resume()
+	c.txt.Resume()
 }
 
 func (c *client) Stop() error {
