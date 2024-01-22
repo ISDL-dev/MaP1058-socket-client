@@ -5,9 +5,9 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
-	"github.com/Be3751/MaP1058-socket-client/internal/model"
-	"github.com/Be3751/MaP1058-socket-client/internal/parser"
-	"github.com/Be3751/MaP1058-socket-client/internal/socket"
+	"github.com/ISDL-dev/MaP1058-socket-client/internal/model"
+	"github.com/ISDL-dev/MaP1058-socket-client/internal/parser"
+	"github.com/ISDL-dev/MaP1058-socket-client/internal/socket"
 	"io"
 	"time"
 )

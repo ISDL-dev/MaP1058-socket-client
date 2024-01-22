@@ -3,7 +3,7 @@ package parser
 import (
 	"testing"
 
-	"github.com/Be3751/MaP1058-socket-client/internal/model"
+	"github.com/ISDL-dev/MaP1058-socket-client/internal/model"
 	"github.com/stretchr/testify/assert"
 )
 

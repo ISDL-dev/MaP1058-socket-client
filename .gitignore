@@ -18,3 +18,5 @@
 
 # saved data
 output/*
+
+.DS_Store

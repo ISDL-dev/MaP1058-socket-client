@@ -1,7 +1,7 @@
 package main
 
 import (
-	client "github.com/Be3751/MaP1058-socket-client"
+	client "github.com/ISDL-dev/MaP1058-socket-client"
 	"time"
 )
 

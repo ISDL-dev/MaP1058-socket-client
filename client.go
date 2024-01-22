@@ -4,16 +4,16 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
-	"github.com/Be3751/MaP1058-socket-client/internal/model"
-	"github.com/Be3751/MaP1058-socket-client/internal/utils/net"
+	"github.com/ISDL-dev/MaP1058-socket-client/internal/model"
+	"github.com/ISDL-dev/MaP1058-socket-client/internal/utils/net"
 	"os"
 	"sync"
 	"time"
 
-	"github.com/Be3751/MaP1058-socket-client/internal/adapter"
-	"github.com/Be3751/MaP1058-socket-client/internal/parser"
-	"github.com/Be3751/MaP1058-socket-client/internal/scanner"
-	"github.com/Be3751/MaP1058-socket-client/internal/socket"
+	"github.com/ISDL-dev/MaP1058-socket-client/internal/adapter"
+	"github.com/ISDL-dev/MaP1058-socket-client/internal/parser"
+	"github.com/ISDL-dev/MaP1058-socket-client/internal/scanner"
+	"github.com/ISDL-dev/MaP1058-socket-client/internal/socket"
 )
 
 type Client interface {

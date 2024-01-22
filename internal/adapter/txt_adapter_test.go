@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Be3751/MaP1058-socket-client/internal/model"
-	mock_parser "github.com/Be3751/MaP1058-socket-client/internal/parser/mock"
-	mock_scanner "github.com/Be3751/MaP1058-socket-client/internal/scanner/mock"
-	mock_socket "github.com/Be3751/MaP1058-socket-client/internal/socket/mock"
+	"github.com/ISDL-dev/MaP1058-socket-client/internal/model"
+	mock_parser "github.com/ISDL-dev/MaP1058-socket-client/internal/parser/mock"
+	mock_scanner "github.com/ISDL-dev/MaP1058-socket-client/internal/scanner/mock"
+	mock_socket "github.com/ISDL-dev/MaP1058-socket-client/internal/socket/mock"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 )

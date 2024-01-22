@@ -2,7 +2,7 @@ package parser
 
 import (
 	"fmt"
-	"github.com/Be3751/MaP1058-socket-client/internal/model"
+	"github.com/ISDL-dev/MaP1058-socket-client/internal/model"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
