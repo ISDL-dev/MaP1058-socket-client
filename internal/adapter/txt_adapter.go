@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Be3751/MaP1058-socket-client/internal/model"
-	"github.com/Be3751/MaP1058-socket-client/internal/parser"
-	"github.com/Be3751/MaP1058-socket-client/internal/scanner"
-	"github.com/Be3751/MaP1058-socket-client/internal/socket"
+	"github.com/ISDL-dev/MaP1058-socket-client/internal/model"
+	"github.com/ISDL-dev/MaP1058-socket-client/internal/parser"
+	"github.com/ISDL-dev/MaP1058-socket-client/internal/scanner"
+	"github.com/ISDL-dev/MaP1058-socket-client/internal/socket"
 )
 
 // TxtAdapter テキストデータでトレンドデータの受信やコマンドの送受信をする

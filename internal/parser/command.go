@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Be3751/MaP1058-socket-client/internal/model"
+	"github.com/ISDL-dev/MaP1058-socket-client/internal/model"
 )
 
 func (p *parser) ToCommand(s string) (model.Command, error) {

@@ -8,7 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	model "github.com/Be3751/MaP1058-socket-client/internal/model"
+	model "github.com/ISDL-dev/MaP1058-socket-client/internal/model"
 	gomock "go.uber.org/mock/gomock"
 )
 
